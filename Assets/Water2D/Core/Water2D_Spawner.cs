@@ -42,17 +42,17 @@
 		/// <summary>
 		/// The size of each drop.
 		/// </summary>
-		[Range (0f,2f)]	public float size = .45f;
+		[Range (0f,2f)]	public float size = .25f;
 
 		/// <summary>
 		/// The life time of each particle.
 		/// </summary>
-		[Range (0f,100f)] public float LifeTime = 5f;
+		[Range (0f,100f)] public float LifeTime = 4f;
 
 		/// <summary>
 		/// The delay between particles emission.
 		/// </summary>
-		[Range (0f,.3f)] public float DelayBetweenParticles = 0.05f;
+		[Range (0f,10f)] public float DelayBetweenParticles = 10f;
 
 		/// <summary>
 		/// The water material.
@@ -60,8 +60,8 @@
 
 		[Header("Material & color")]
 		public Material WaterMaterial;
-		public Color FillColor = new Color(0f,112/255f,1f);
-		public Color StrokeColor = new Color(4/255f,156/255f,1f);
+		public Color FillColor = new Color(255f/255f,161f/255f,0f);
+		public Color StrokeColor = new Color(245f/255f,134f/255f,40f/255f);
 
 
 
@@ -71,7 +71,7 @@
 		/// <summary>
 		/// The initial speed of particles after spawn.
 		/// </summary>
-		public Vector2 initSpeed = new Vector2(1f,-1.8f);
+		public Vector2 initSpeed = new Vector2(0.2f,-2f);
 
 
 		[Separator()]
@@ -86,20 +86,20 @@
         [Header("Runtime actions")]
 
         [ButtonAttribute("Start!", "Water2D.Water2D_Spawner", "RunSpawner")]public bool btn_0;
-		static void RunSpawner()
+		public static void RunSpawner()
 		{
             instance.Spawn();
 
         }
 
         [ButtonAttribute("Stop", "Water2D.Water2D_Spawner", "JustStopSpawner")] public bool btn_1;
-        static void JustStopSpawner()
+        public static void JustStopSpawner()
         {
             instance._breakLoop = true;
 
         }
         [ButtonAttribute("Stop and restore", "Water2D.Water2D_Spawner", "StopSpawner")] public bool btn_2;
-        static void StopSpawner()
+        public static void StopSpawner()
         {
             instance.Restore();
 
@@ -176,7 +176,7 @@
 			microSpawns = new List<microSpawn>(5); // Up to 5 microspwawn
 
 
-            instance.Spawn();
+            // instance.Spawn();
         }
 
 		public void RunMicroSpawn(Vector3 pos, int amount, Vector2 initVel)
