@@ -49,6 +49,7 @@ public class JuiceController : MonoBehaviour
             {
                 orangeRight.transform.localScale = new Vector3(0.5f-(i*(0.15f / 9f)), 0.5f, 1f);
                 Water2D.Water2D_Spawner.instance.DelayBetweenParticles = 10f-i;
+                Water2D.Water2D_Spawner.instance.initSpeed = new Vector2(UnityEngine.Random.Range(-0.5f, 0.5f), -2f);
                 Water2D.Water2D_Spawner.RunSpawner();
                 return;
             }
