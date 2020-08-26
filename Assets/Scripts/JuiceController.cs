@@ -22,13 +22,15 @@ public class JuiceController : MonoBehaviour
         ResetJuiceSpawner();
     }
 
-    void ResetJuiceSpawner()
+    public void ResetJuiceSpawner()
     {
         Water2D.Water2D_Spawner.StopSpawner();
         Water2D.Water2D_Spawner.instance.size = 0.25f;
         Water2D.Water2D_Spawner.instance.initSpeed = new Vector2(0.2f, -2f);
         Water2D.Water2D_Spawner.instance.DelayBetweenParticles = 10f;
         Water2D.Water2D_Spawner.instance.LifeTime = 40f;
+        
+        orangeRight.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
     }
 
     // Update is called once per frame
@@ -38,7 +40,6 @@ public class JuiceController : MonoBehaviour
         if (Input.GetKey(KeyCode.R))
         {
             ResetJuiceSpawner();
-            orangeRight.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
             return;
         }
 
