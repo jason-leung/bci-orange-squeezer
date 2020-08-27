@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System;
+using UnityEditorInternal;
 
 public class BlockManager : MonoBehaviour
 {
@@ -17,6 +18,7 @@ public class BlockManager : MonoBehaviour
     bool trialStarted;
     DateTime trialStartTime;
     public List<List<float>> trial_timings;
+    public string state;
 
     // UI
     public GameObject blockPanel;
@@ -59,6 +61,7 @@ public class BlockManager : MonoBehaviour
         block_number = 0;
         trial_number = 0;
         trialStarted = false;
+        state = "";
 
         InitializeTrials();
         LoadBlock();
@@ -74,6 +77,11 @@ public class BlockManager : MonoBehaviour
             // Cue Ready
             if (timeElapsed >= trial_timings[0][0] && timeElapsed < trial_timings[0][1])
             {
+                if (state != "cue_ready")
+                {
+                    // send string marker to LSL
+                    state = "cue_ready";
+                }
                 cueReady.SetActive(true);
                 cueGo.SetActive(false);
                 glassLeft.SetActive(trials[block_number][trial_number] == "l");
@@ -82,6 +90,11 @@ public class BlockManager : MonoBehaviour
             // Cue Go
             else if (timeElapsed >= trial_timings[1][0] && timeElapsed < trial_timings[1][1])
             {
+                if (state != "cue_go")
+                {
+                    // send string marker to LSL
+                    state = "cue_go";
+                }
                 cueReady.SetActive(false);
                 cueGo.SetActive(true);
                 glassLeft.SetActive(trials[block_number][trial_number] == "l");
@@ -90,6 +103,11 @@ public class BlockManager : MonoBehaviour
             // Task
             else if (timeElapsed >= trial_timings[2][0] && timeElapsed < trial_timings[2][1])
             {
+                if (state != "task")
+                {
+                    // send string marker to LSL
+                    state = "task";
+                }
                 cueReady.SetActive(false);
                 cueGo.SetActive(false);
                 glassLeft.SetActive(trials[block_number][trial_number] == "l");
@@ -98,6 +116,11 @@ public class BlockManager : MonoBehaviour
             // Rest
             else if (timeElapsed >= trial_timings[3][0] && timeElapsed < trial_timings[3][1])
             {
+                if (state != "rest")
+                {
+                    // send string marker to LSL
+                    state = "rest";
+                }
                 cueReady.SetActive(false);
                 cueGo.SetActive(false);
                 glassLeft.SetActive(false);
@@ -106,6 +129,7 @@ public class BlockManager : MonoBehaviour
             // End of trial
             else if (timeElapsed >= trial_timings[3][1])
             {
+                state = "";
                 trialStarted = false;
                 trial_number += 1;
 
@@ -185,6 +209,7 @@ public class BlockManager : MonoBehaviour
         trialStarted = true;
         trialStartTime = DateTime.Now;
         juiceController.ResetJuiceSpawner();
+        state = "";
     }
 
     public void ReturnToHome()

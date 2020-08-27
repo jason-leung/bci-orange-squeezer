@@ -86,20 +86,20 @@
         [Header("Runtime actions")]
 
         [ButtonAttribute("Start!", "Water2D.Water2D_Spawner", "RunSpawner")]public bool btn_0;
-		public static void RunSpawner()
+		public void RunSpawner()
 		{
             instance.Spawn();
 
         }
 
         [ButtonAttribute("Stop", "Water2D.Water2D_Spawner", "JustStopSpawner")] public bool btn_1;
-        public static void JustStopSpawner()
+        public void JustStopSpawner()
         {
             instance._breakLoop = true;
 
         }
         [ButtonAttribute("Stop and restore", "Water2D.Water2D_Spawner", "StopSpawner")] public bool btn_2;
-        public static void StopSpawner()
+        public void StopSpawner()
         {
             instance.Restore();
 
@@ -139,7 +139,7 @@
 		// Used to make spawn in other positions with same properties (use same array of particles)
 		List<microSpawn> microSpawns;
 
-		bool _breakLoop = false;
+		public bool _breakLoop = false;
 
 		GameObject _parent;
 
@@ -244,7 +244,7 @@
 			IsWaterInScene = false;
 			_breakLoop = true;
 
-			microSpawns.Clear ();
+			if (microSpawns != null) microSpawns.Clear ();
 
 
 			for (int i = 0; i < WaterDropsObjects.Length; i++) {
