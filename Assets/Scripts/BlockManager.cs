@@ -5,7 +5,6 @@ using System.Linq;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System;
-using UnityEditorInternal;
 
 public class BlockManager : MonoBehaviour
 {
@@ -44,11 +43,6 @@ public class BlockManager : MonoBehaviour
         sessionOverPanel = FindObjectOfType<Canvas>().transform.Find("SessionOver_Panel").gameObject;
         glassRight = GameObject.Find("Right").transform.Find("Glass").gameObject;
         glassLeft = GameObject.Find("Left").transform.Find("Glass").gameObject;
-        cueReady = FindObjectOfType<Canvas>().transform.Find("Ready_Text").gameObject;
-        cueGo = FindObjectOfType<Canvas>().transform.Find("Go_Text").gameObject;
-
-        // Find classes
-        juiceController = FindObjectOfType<JuiceController>();
 
         // Initialize blocks and trials
         // blocks = new List<string>() { "ME", "ME", "ME", "MI", "MI", "MI" };
