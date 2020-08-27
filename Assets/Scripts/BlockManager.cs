@@ -32,6 +32,7 @@ public class BlockManager : MonoBehaviour
 
     // Classes
     public JuiceController juiceController;
+    public LSLHandler lslHandler;
 
     void Start()
     {
@@ -73,7 +74,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "cue_ready")
                 {
-                    // send string marker to LSL
+                    lslHandler.SendLSLStringMarker("cue_ready");
                     state = "cue_ready";
                 }
                 cueReady.SetActive(true);
@@ -86,7 +87,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "cue_go")
                 {
-                    // send string marker to LSL
+                    lslHandler.SendLSLStringMarker("cue_go");
                     state = "cue_go";
                 }
                 cueReady.SetActive(false);
@@ -99,7 +100,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "task")
                 {
-                    // send string marker to LSL
+                    lslHandler.SendLSLStringMarker("task");
                     state = "task";
                 }
                 cueReady.SetActive(false);
@@ -112,7 +113,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "rest")
                 {
-                    // send string marker to LSL
+                    lslHandler.SendLSLStringMarker("rest");
                     state = "rest";
                 }
                 cueReady.SetActive(false);
@@ -147,6 +148,7 @@ public class BlockManager : MonoBehaviour
                     else
                     {
                         sessionOverPanel.SetActive(true);
+                        lslHandler.SendLSLStringMarker("END");
                     }
                 }
             }
@@ -204,6 +206,7 @@ public class BlockManager : MonoBehaviour
         trialStartTime = DateTime.Now;
         juiceController.ResetJuiceSpawner();
         state = "";
+        lslHandler.SendLSLStringMarker("start_block_" + block_number + "_" + blocks[block_number] + "_trial_" + trial_number + "_" + trials[block_number][trial_number]);
     }
 
     public void ReturnToHome()
