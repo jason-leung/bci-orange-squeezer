@@ -16,7 +16,7 @@ public class BlockManager : MonoBehaviour
     public int block_number;
     private int trial_number;
     bool trialStarted;
-    DateTime trialStartTime;
+    float trialStartTime;
     public List<List<float>> trial_timings;
     public string state;
 
@@ -59,6 +59,7 @@ public class BlockManager : MonoBehaviour
                                                   new List<float>() { 2f, 8f }, new List<float>() { 8f, 9.5f } }; // task, rest
         block_number = 0;
         trial_number = 0;
+        trialStartTime = Time.time;
         trialStarted = false;
         state = "";
 
@@ -70,8 +71,8 @@ public class BlockManager : MonoBehaviour
     {
         if (trialStarted)
         {
-            DateTime currentTime = DateTime.Now;
-            double timeElapsed = currentTime.Subtract(trialStartTime).TotalSeconds;
+            float currentTime = Time.time;
+            float timeElapsed = currentTime - trialStartTime; // seconds
             
             // Cue Ready
             if (timeElapsed >= trial_timings[0][0] && timeElapsed < trial_timings[0][1])
@@ -207,7 +208,7 @@ public class BlockManager : MonoBehaviour
     public void StartTrial()
     {
         trialStarted = true;
-        trialStartTime = DateTime.Now;
+        trialStartTime = Time.time;
         juiceController.ResetJuiceSpawner();
         state = "";
         gameMarkerStream.WriteGameMarker("start_block_" + block_number + "_" + blocks[block_number] + "_trial_" + trial_number + "_" + trials[block_number][trial_number]);

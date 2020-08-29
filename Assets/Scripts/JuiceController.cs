@@ -81,18 +81,22 @@ public class JuiceController : MonoBehaviour
 
     public void StopSqueezeLeft()
     {
+        if (Time.timeScale == 0f) return; // don't do anything if timescale is set to 0
         orange_left.transform.localScale = new Vector3(-0.5f, 0.5f, 1f); 
         waterSpawner_left._breakLoop = true;
     }
 
     public void StopSqueezeRight()
     {
+        if (Time.timeScale == 0f) return; // don't do anything if timescale is set to 0
         orange_right.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
         waterSpawner_right._breakLoop = true;
     }
 
     public void SqueezeLeft(float magnitude)
     {
+        if (Time.timeScale == 0f) return; // don't do anything if timescale is set to 0
+
         if (blockManager.state == "task")
         {
             orange_left.transform.localScale = new Vector3(-0.5f + (magnitude * (0.15f / 9f)), 0.5f, 1f);
@@ -104,6 +108,8 @@ public class JuiceController : MonoBehaviour
 
     public void SqueezeRight(float magnitude)
     {
+        if (Time.timeScale == 0f) return; // don't do anything if timescale is set to 0
+
         if (blockManager.state == "task")
         {
             orange_right.transform.localScale = new Vector3(0.5f - (magnitude * (0.15f / 9f)), 0.5f, 1f);
