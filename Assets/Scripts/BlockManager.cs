@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System;
+using Assets.LSL4Unity.Scripts;
 
 public class BlockManager : MonoBehaviour
 {
@@ -32,7 +33,7 @@ public class BlockManager : MonoBehaviour
 
     // Classes
     public JuiceController juiceController;
-    public LSLHandler lslHandler;
+    public GameMarkerStream gameMarkerStream;
 
     void Start()
     {
@@ -44,6 +45,9 @@ public class BlockManager : MonoBehaviour
         sessionOverPanel = FindObjectOfType<Canvas>().transform.Find("SessionOver_Panel").gameObject;
         glassRight = GameObject.Find("Right").transform.Find("Glass").gameObject;
         glassLeft = GameObject.Find("Left").transform.Find("Glass").gameObject;
+
+        // Find Classes
+        gameMarkerStream = FindObjectOfType<GameMarkerStream>();
 
         // Initialize blocks and trials
         // blocks = new List<string>() { "ME", "ME", "ME", "MI", "MI", "MI" };
@@ -74,7 +78,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "cue_ready")
                 {
-                    lslHandler.Send_LSL_StringMarker("cue_ready");
+                    gameMarkerStream.WriteGameMarker("cue_ready");
                     state = "cue_ready";
                 }
                 cueReady.SetActive(true);
@@ -87,7 +91,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "cue_go")
                 {
-                    lslHandler.Send_LSL_StringMarker("cue_go");
+                    gameMarkerStream.WriteGameMarker("cue_go");
                     state = "cue_go";
                 }
                 cueReady.SetActive(false);
@@ -100,7 +104,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "task")
                 {
-                    lslHandler.Send_LSL_StringMarker("task");
+                    gameMarkerStream.WriteGameMarker("task");
                     state = "task";
                 }
                 cueReady.SetActive(false);
@@ -113,7 +117,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "rest")
                 {
-                    lslHandler.Send_LSL_StringMarker("rest");
+                    gameMarkerStream.WriteGameMarker("rest");
                     state = "rest";
                 }
                 cueReady.SetActive(false);
@@ -148,7 +152,7 @@ public class BlockManager : MonoBehaviour
                     else
                     {
                         sessionOverPanel.SetActive(true);
-                        lslHandler.Send_LSL_StringMarker("END");
+                        gameMarkerStream.WriteGameMarker("END");
                     }
                 }
             }
@@ -206,7 +210,7 @@ public class BlockManager : MonoBehaviour
         trialStartTime = DateTime.Now;
         juiceController.ResetJuiceSpawner();
         state = "";
-        lslHandler.Send_LSL_StringMarker("start_block_" + block_number + "_" + blocks[block_number] + "_trial_" + trial_number + "_" + trials[block_number][trial_number]);
+        gameMarkerStream.WriteGameMarker("start_block_" + block_number + "_" + blocks[block_number] + "_trial_" + trial_number + "_" + trials[block_number][trial_number]);
     }
 
     public void ReturnToHome()
