@@ -1,23 +1,25 @@
-﻿using System;
+﻿#define LSL4UnityLibrary
+
+using System;
 using System.Runtime.InteropServices;
 using System.Collections;
 
 
+/**
+* C# API for the lab streaming layer.
+* 
+* The lab streaming layer provides a set of functions to make instrument data accessible 
+* in real time within a lab network. From there, streams can be picked up by recording programs, 
+* viewing programs or custom experiment applications that access data streams in real time.
+*
+* The API covers two areas:
+* - The "push API" allows to create stream outlets and to push data (regular or irregular measurement 
+*   time series, event data, coded audio/video frames, etc.) into them.
+* - The "pull API" allows to create stream inlets and read time-synched experiment data from them 
+*   (for recording, viewing or experiment control).
+*
+*/
 namespace LSL {
-    /// <summary>
-    /// C# API for the lab streaming layer.
-    /// 
-    /// The lab streaming layer provides a set of functions to make instrument data accessible 
-    /// in real time within a lab network. From there, streams can be picked up by recording programs, 
-    /// viewing programs or custom experiment applications that access data streams in real time.
-    /// 
-    /// The API covers two areas:
-    /// - The "push API" allows to create stream outlets and to push data (regular or irregular measurement 
-    ///   time series, event data, coded audio/video frames, etc.) into them.
-    /// - The "pull API" allows to create stream inlets and read time-synched experiment data from them 
-    ///   (for recording, viewing or experiment control).
-    /// 
-    /// </summary>
 
 public class liblsl
 {
@@ -65,38 +67,30 @@ public class liblsl
     };
 
     /**
-    * Post-processing options for stream inlets.
+    * Post-processing options for stream inlets. 
     */
     public enum processing_options_t : byte
     {
-        proc_none = 0,              // No automatic post-processing; return the ground-truth time stamps for manual
-                                    // post-processing. This is the default behavior of the inlet.
-            
-        proc_clocksync = 1,         // Perform automatic clock synchronization; equivalent to manually adding
-                                    // the time_correction() value to the received time stamps.
-
-        proc_dejitter = 2,          // Remove jitter from time stamps.
-                                    // This will apply a smoothing algorithm to the received time stamps;
-                                    // the smoothing needs to see a minimum number of samples (30-120 seconds worst-case)
-                                    // until the remaining jitter is consistently below 1ms.
-
-        proc_monotonize = 4,        // Force the time-stamps to be monotonically ascending.
-                                    // Only makes sense if timestamps are dejittered.
-
-        proc_threadsafe = 8,        // Post-processing is thread-safe (same inlet can be read from by multiple threads);
-                                    // uses somewhat more CPU.
-
-        proc_ALL = 1 | 2 | 4 | 8    // The combination of all possible post-processing options.
+        post_none = 0,          // No automatic post-processing; return the ground-truth time stamps for manual post-processing
+                                // (this is the default behavior of the inlet).
+        post_clocksync = 1,     // Perform automatic clock synchronization; equivalent to manually adding the time_correction() value
+                                // to the received time stamps.
+        post_dejitter = 2,      // Remove jitter from time stamps. This will apply a smoothing algorithm to the received time stamps;
+                                // the smoothing needs to see a minimum number of samples (30-120 seconds worst-case) until the remaining  
+                                // jitter is consistently below 1ms.
+        post_monotonize = 4,    // Force the time-stamps to be monotonically ascending (only makes sense if timestamps are dejittered).
+        post_threadsafe = 8,    // Post-processing is thread-safe (same inlet can be read from by multiple threads); uses somewhat more CPU.
+        post_ALL = 1 | 2 | 4 | 8// The combination of all possible post-processing options.
     };
 
-    /**
-    * Protocol version.
-    * The major version is protocol_version() / 100;
-    * The minor version is protocol_version() % 100;
-    * Clients with different minor versions are protocol-compatible with each other 
-    * while clients with different major versions will refuse to work together.
-    */
-    public static int protocol_version() { return dll.lsl_protocol_version(); }
+        /**
+        * Protocol version.
+        * The major version is protocol_version() / 100;
+        * The minor version is protocol_version() % 100;
+        * Clients with different minor versions are protocol-compatible with each other 
+        * while clients with different major versions will refuse to work together.
+        */
+        public static int protocol_version() { return dll.lsl_protocol_version(); }
 
     /**
     * Version of the liblsl library.
@@ -153,7 +147,11 @@ public class liblsl
         *                  serving app, device or computer crashes (just by finding a stream with the same source id on the network again).
         *                  Therefore, it is highly recommended to always try to provide whatever information can uniquely identify the data source itself.
         */
-        public StreamInfo(string name, string type, int channel_count = 1, double nominal_srate = IRREGULAR_RATE, channel_format_t channel_format = channel_format_t.cf_float32, string source_id = "") { obj = dll.lsl_create_streaminfo(name, type, channel_count, nominal_srate, channel_format, source_id); }
+        public StreamInfo(string name, string type) { obj = dll.lsl_create_streaminfo(name, type, 1, IRREGULAR_RATE, channel_format_t.cf_float32, ""); }
+        public StreamInfo(string name, string type, int channel_count) { obj = dll.lsl_create_streaminfo(name, type, channel_count, IRREGULAR_RATE, channel_format_t.cf_float32, ""); }
+        public StreamInfo(string name, string type, int channel_count, double nominal_srate) { obj = dll.lsl_create_streaminfo(name, type, channel_count, nominal_srate, channel_format_t.cf_float32, ""); }
+        public StreamInfo(string name, string type, int channel_count, double nominal_srate, channel_format_t channel_format) { obj = dll.lsl_create_streaminfo(name, type, channel_count, nominal_srate, channel_format, ""); }
+        public StreamInfo(string name, string type, int channel_count, double nominal_srate, channel_format_t channel_format, string source_id) { obj = dll.lsl_create_streaminfo(name, type, channel_count, nominal_srate, channel_format, source_id); }
         public StreamInfo(IntPtr handle) { obj = handle; }
 
         /// Destroy a previously created streaminfo object.
@@ -314,7 +312,9 @@ public class liblsl
         * @param max_buffered Optionally the maximum amount of data to buffer (in seconds if there is a nominal 
         *                     sampling rate, otherwise x100 in samples). The default is 6 minutes of data. 
         */
-        public StreamOutlet(StreamInfo info, int chunk_size = 0, int max_buffered = 360) { obj = dll.lsl_create_outlet(info.handle(), chunk_size, max_buffered); }
+        public StreamOutlet(StreamInfo info) { obj = dll.lsl_create_outlet(info.handle(), 0, 360); }
+        public StreamOutlet(StreamInfo info, int chunk_size) { obj = dll.lsl_create_outlet(info.handle(), chunk_size, 360); }
+        public StreamOutlet(StreamInfo info, int chunk_size, int max_buffered) { obj = dll.lsl_create_outlet(info.handle(), chunk_size, max_buffered); }
 
         /**
         * Destructor.
@@ -335,12 +335,24 @@ public class liblsl
         * @param pushthrough Optionally whether to push the sample through to the receivers instead of buffering it with subsequent samples.
         *                    Note that the chunk_size, if specified at outlet construction, takes precedence over the pushthrough flag.
         */
-        public void push_sample(float[] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_sample_ftp(obj, data, timestamp, pushthrough ? 1 : 0); }
-        public void push_sample(double[] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_sample_dtp(obj, data, timestamp, pushthrough ? 1 : 0); }
-        public void push_sample(int[] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_sample_itp(obj, data, timestamp, pushthrough ? 1 : 0); }
-        public void push_sample(short[] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_sample_stp(obj, data, timestamp, pushthrough ? 1 : 0); }
-        public void push_sample(char[] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_sample_ctp(obj, data, timestamp, pushthrough ? 1 : 0); }
-        public void push_sample(string[] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_sample_strtp(obj, data, timestamp, pushthrough ? 1 : 0); }
+        public void push_sample(float[] data) { dll.lsl_push_sample_ftp(obj, data, 0.0, 1); }
+        public void push_sample(float[] data, double timestamp) { dll.lsl_push_sample_ftp(obj, data, timestamp, 1); }
+        public void push_sample(float[] data, double timestamp, bool pushthrough) { dll.lsl_push_sample_ftp(obj, data, timestamp, pushthrough ? 1 : 0); }
+        public void push_sample(double[] data) { dll.lsl_push_sample_dtp(obj, data, 0.0, 1); }
+        public void push_sample(double[] data, double timestamp) { dll.lsl_push_sample_dtp(obj, data, timestamp, 1); }
+        public void push_sample(double[] data, double timestamp, bool pushthrough) { dll.lsl_push_sample_dtp(obj, data, timestamp, pushthrough ? 1 : 0); }
+        public void push_sample(int[] data) { dll.lsl_push_sample_itp(obj, data, 0.0, 1); }
+        public void push_sample(int[] data, double timestamp) { dll.lsl_push_sample_itp(obj, data, timestamp, 1); }
+        public void push_sample(int[] data, double timestamp, bool pushthrough) { dll.lsl_push_sample_itp(obj, data, timestamp, pushthrough ? 1 : 0); }
+        public void push_sample(short[] data) { dll.lsl_push_sample_stp(obj, data, 0.0, 1); }
+        public void push_sample(short[] data, double timestamp) { dll.lsl_push_sample_stp(obj, data, timestamp, 1); }
+        public void push_sample(short[] data, double timestamp, bool pushthrough) { dll.lsl_push_sample_stp(obj, data, timestamp, pushthrough ? 1 : 0); }
+        public void push_sample(char[] data) { dll.lsl_push_sample_ctp(obj, data, 0.0, 1); }
+        public void push_sample(char[] data, double timestamp) { dll.lsl_push_sample_ctp(obj, data, timestamp, 1); }
+        public void push_sample(char[] data, double timestamp, bool pushthrough) { dll.lsl_push_sample_ctp(obj, data, timestamp, pushthrough ? 1 : 0); }
+        public void push_sample(string[] data) { dll.lsl_push_sample_strtp(obj, data, 0.0, 1); }
+        public void push_sample(string[] data, double timestamp) { dll.lsl_push_sample_strtp(obj, data, timestamp, 1); }
+        public void push_sample(string[] data, double timestamp, bool pushthrough) { dll.lsl_push_sample_strtp(obj, data, timestamp, pushthrough ? 1 : 0); }
 
 
         // ===================================================
@@ -355,12 +367,24 @@ public class liblsl
         * @param pushthrough Optionally whether to push the chunk through to the receivers instead of buffering it with subsequent samples.
         *                    Note that the chunk_size, if specified at outlet construction, takes precedence over the pushthrough flag.
         */
-        public void push_chunk(float[,] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_chunk_ftp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
-        public void push_chunk(double[,] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_chunk_dtp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
-        public void push_chunk(int[,] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_chunk_itp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
-        public void push_chunk(short[,] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_chunk_stp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
-        public void push_chunk(char[,] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_chunk_ctp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
-        public void push_chunk(string[,] data, double timestamp = 0.0, bool pushthrough = true) { dll.lsl_push_chunk_strtp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
+        public void push_chunk(float[,] data) { dll.lsl_push_chunk_ftp(obj, data, (uint)data.Length, 0.0, 1); }
+        public void push_chunk(float[,] data, double timestamp) { dll.lsl_push_chunk_ftp(obj, data, (uint)data.Length, timestamp, 1); }
+        public void push_chunk(float[,] data, double timestamp, bool pushthrough) { dll.lsl_push_chunk_ftp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
+        public void push_chunk(double[,] data) { dll.lsl_push_chunk_dtp(obj, data, (uint)data.Length, 0.0, 1); }
+        public void push_chunk(double[,] data, double timestamp) { dll.lsl_push_chunk_dtp(obj, data, (uint)data.Length, timestamp, 1); }
+        public void push_chunk(double[,] data, double timestamp, bool pushthrough) { dll.lsl_push_chunk_dtp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
+        public void push_chunk(int[,] data) { dll.lsl_push_chunk_itp(obj, data, (uint)data.Length, 0.0, 1); }
+        public void push_chunk(int[,] data, double timestamp) { dll.lsl_push_chunk_itp(obj, data, (uint)data.Length, timestamp, 1); }
+        public void push_chunk(int[,] data, double timestamp, bool pushthrough) { dll.lsl_push_chunk_itp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
+        public void push_chunk(short[,] data) { dll.lsl_push_chunk_stp(obj, data, (uint)data.Length, 0.0, 1); }
+        public void push_chunk(short[,] data, double timestamp) { dll.lsl_push_chunk_stp(obj, data, (uint)data.Length, timestamp, 1); }
+        public void push_chunk(short[,] data, double timestamp, bool pushthrough) { dll.lsl_push_chunk_stp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
+        public void push_chunk(char[,] data) { dll.lsl_push_chunk_ctp(obj, data, (uint)data.Length, 0.0, 1); }
+        public void push_chunk(char[,] data, double timestamp) { dll.lsl_push_chunk_ctp(obj, data, (uint)data.Length, timestamp, 1); }
+        public void push_chunk(char[,] data, double timestamp, bool pushthrough) { dll.lsl_push_chunk_ctp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
+        public void push_chunk(string[,] data) { dll.lsl_push_chunk_strtp(obj, data, (uint)data.Length, 0.0, 1); }
+        public void push_chunk(string[,] data, double timestamp) { dll.lsl_push_chunk_strtp(obj, data, (uint)data.Length, timestamp, 1); }
+        public void push_chunk(string[,] data, double timestamp, bool pushthrough) { dll.lsl_push_chunk_strtp(obj, data, (uint)data.Length, timestamp, pushthrough ? 1 : 0); }
 
         /**
         * Push a chunk of multiplexed samples into the outlet. One timestamp per sample is provided.
@@ -369,12 +393,18 @@ public class liblsl
         * @param pushthrough Optionally whether to push the chunk through to the receivers instead of buffering it with subsequent samples.
         *                    Note that the chunk_size, if specified at outlet construction, takes precedence over the pushthrough flag.
         */
-        public void push_chunk(float[,] data, double[] timestamps, bool pushthrough = true) { dll.lsl_push_chunk_ftnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
-        public void push_chunk(double[,] data, double[] timestamps, bool pushthrough = true) { dll.lsl_push_chunk_dtnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
-        public void push_chunk(int[,] data, double[] timestamps, bool pushthrough = true) { dll.lsl_push_chunk_itnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
-        public void push_chunk(short[,] data, double[] timestamps, bool pushthrough = true) { dll.lsl_push_chunk_stnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
-        public void push_chunk(char[,] data, double[] timestamps, bool pushthrough = true) { dll.lsl_push_chunk_ctnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
-        public void push_chunk(string[,] data, double[] timestamps, bool pushthrough = true) { dll.lsl_push_chunk_strtnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
+        public void push_chunk(float[,] data, double[] timestamps) { dll.lsl_push_chunk_ftnp(obj, data, (uint)data.Length, timestamps, 1); }
+        public void push_chunk(float[,] data, double[] timestamps, bool pushthrough) { dll.lsl_push_chunk_ftnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
+        public void push_chunk(double[,] data, double[] timestamps) { dll.lsl_push_chunk_dtnp(obj, data, (uint)data.Length, timestamps, 1); }
+        public void push_chunk(double[,] data, double[] timestamps, bool pushthrough) { dll.lsl_push_chunk_dtnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
+        public void push_chunk(int[,] data, double[] timestamps) { dll.lsl_push_chunk_itnp(obj, data, (uint)data.Length, timestamps, 1); }
+        public void push_chunk(int[,] data, double[] timestamps, bool pushthrough) { dll.lsl_push_chunk_itnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
+        public void push_chunk(short[,] data, double[] timestamps) { dll.lsl_push_chunk_stnp(obj, data, (uint)data.Length, timestamps, 1); }
+        public void push_chunk(short[,] data, double[] timestamps, bool pushthrough) { dll.lsl_push_chunk_stnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
+        public void push_chunk(char[,] data, double[] timestamps) { dll.lsl_push_chunk_ctnp(obj, data, (uint)data.Length, timestamps, 1); }
+        public void push_chunk(char[,] data, double[] timestamps, bool pushthrough) { dll.lsl_push_chunk_ctnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
+        public void push_chunk(string[,] data, double[] timestamps) { dll.lsl_push_chunk_strtnp(obj, data, (uint)data.Length, timestamps, 1); }
+        public void push_chunk(string[,] data, double[] timestamps, bool pushthrough) { dll.lsl_push_chunk_strtnp(obj, data, (uint)data.Length, timestamps, pushthrough ? 1 : 0); }
 
 
         // ===============================
@@ -391,7 +421,7 @@ public class liblsl
         * Wait until some consumer shows up (without wasting resources).
         * @return True if the wait was successful, false if the timeout expired.
         */
-        public bool wait_for_consumers(double timeout = FOREVER) { return dll.lsl_wait_for_consumers(obj)>0; }
+        public bool wait_for_consumers(double timeout) { return dll.lsl_wait_for_consumers(obj)>0; }
 
         /**
         * Retrieve the stream info provided by this outlet.
@@ -421,7 +451,8 @@ public class liblsl
     * @return An array of stream info objects (excluding their desc field), any of which can 
     *         subsequently be used to open an inlet. The full info can be retrieve from the inlet.
     */
-    public static StreamInfo[] resolve_streams(double wait_time = 1.0)
+    public static StreamInfo[] resolve_streams() { return resolve_streams(1.0); }
+    public static StreamInfo[] resolve_streams(double wait_time)
     {
         IntPtr[] buf = new IntPtr[1024]; int num = dll.lsl_resolve_all(buf, (uint)buf.Length, wait_time);
         StreamInfo[] res = new StreamInfo[num];
@@ -441,7 +472,9 @@ public class liblsl
     * @return An array of matching stream info objects (excluding their meta-data), any of 
     *         which can subsequently be used to open an inlet.
     */
-    public static StreamInfo[] resolve_stream(string prop, string value, int minimum = 1, double timeout = FOREVER)
+    public static StreamInfo[] resolve_stream(string prop, string value) { return resolve_stream(prop, value, 1, FOREVER); }
+    public static StreamInfo[] resolve_stream(string prop, string value, int minimum) { return resolve_stream(prop, value, minimum, FOREVER); }
+    public static StreamInfo[] resolve_stream(string prop, string value, int minimum, double timeout)
     {
         IntPtr[] buf = new IntPtr[1024]; int num = dll.lsl_resolve_byprop(buf, (uint)buf.Length, prop, value, minimum, timeout);
         StreamInfo[] res = new StreamInfo[num];
@@ -461,7 +494,9 @@ public class liblsl
     * @return An array of matching stream info objects (excluding their meta-data), any of 
     *         which can subsequently be used to open an inlet.
     */
-    public static StreamInfo[] resolve_stream(string pred, int minimum = 1, double timeout = FOREVER)
+    public static StreamInfo[] resolve_stream(string pred) { return resolve_stream(pred, 1, FOREVER); }
+    public static StreamInfo[] resolve_stream(string pred, int minimum) { return resolve_stream(pred, minimum, FOREVER); }
+    public static StreamInfo[] resolve_stream(string pred, int minimum, double timeout)
     {
         IntPtr[] buf = new IntPtr[1024]; int num = dll.lsl_resolve_bypred(buf, (uint)buf.Length, pred, minimum, timeout);
         StreamInfo[] res = new StreamInfo[num];
@@ -501,10 +536,10 @@ public class liblsl
         *                In all other cases (recover is false or the stream is not recoverable) functions may throw a 
         *                LostException if the stream's source is lost (e.g., due to an app or computer crash).
         */
-        public StreamInlet(StreamInfo info, int max_buflen = 360, int max_chunklen = 0, bool recover = true, processing_options_t postproc_flags = processing_options_t.proc_none) {
-                obj = dll.lsl_create_inlet(info.handle(), max_buflen, max_chunklen, recover?1:0);
-                dll.lsl_set_postprocessing(obj, postproc_flags);
-            }
+        public StreamInlet(StreamInfo info) { obj = dll.lsl_create_inlet(info.handle(), 360, 0, 1); }
+        public StreamInlet(StreamInfo info, int max_buflen) { obj = dll.lsl_create_inlet(info.handle(), max_buflen, 0, 1); }
+        public StreamInlet(StreamInfo info, int max_buflen, int max_chunklen) { obj = dll.lsl_create_inlet(info.handle(), max_buflen, max_chunklen, 1); }
+        public StreamInlet(StreamInfo info, int max_buflen, int max_chunklen, bool recover) { obj = dll.lsl_create_inlet(info.handle(), max_buflen, max_chunklen, recover?1:0); }
 
         /** 
         * Destructor.
@@ -518,7 +553,8 @@ public class liblsl
         * @param timeout Timeout of the operation (default: no timeout).
         * @throws TimeoutException (if the timeout expires), or LostException (if the stream source has been lost).
         */
-        public StreamInfo info(double timeout = FOREVER) { int ec=0; IntPtr res = dll.lsl_get_fullinfo(obj, timeout, ref ec); check_error(ec); return new StreamInfo(res); }
+        public StreamInfo info() { return info(FOREVER); }
+        public StreamInfo info(double timeout) { int ec=0; IntPtr res = dll.lsl_get_fullinfo(obj, timeout, ref ec); check_error(ec); return new StreamInfo(res); }
 
         /**
         * Subscribe to the data stream.
@@ -528,7 +564,19 @@ public class liblsl
         * @param timeout Optional timeout of the operation (default: no timeout).
         * @throws TimeoutException (if the timeout expires), or LostException (if the stream source has been lost).
         */
-        public void open_stream(double timeout = FOREVER) { int ec = 0; dll.lsl_open_stream(obj, timeout, ref ec); check_error(ec); }
+        public void open_stream() { open_stream(FOREVER); }
+        public void open_stream(double timeout) { int ec = 0; dll.lsl_open_stream(obj, timeout, ref ec); check_error(ec); }
+
+        /**
+        * Set post-processing flags to use. By default, the inlet performs NO post-processing and returns the 
+        * ground-truth time stamps, which can then be manually synchronized using time_correction(), and then 
+        * smoothed/dejittered if desired. This function allows automating these two and possibly more operations.
+        * Warning: when you enable this, you will no longer receive or be able to recover the original time stamps.
+        * @param flags An integer that is the result of bitwise OR'ing one or more options from processing_options_t 
+        *        together (e.g., post_clocksync|post_dejitter); the default is to enable all options.
+        */
+        public void set_postprocessing() { set_postprocessing(processing_options_t.post_ALL); }
+        public void set_postprocessing(processing_options_t post_flags) { dll.lsl_set_postprocessing(obj, post_flags); }
  
         /**
         * Drop the current data stream.
@@ -550,7 +598,8 @@ public class liblsl
         *         that was remotely generated via lsl_local_clock() to map it into the local clock domain of this machine.
         * @throws TimeoutException (if the timeout expires), or LostException (if the stream source has been lost).
         */
-        public double time_correction(double timeout = FOREVER) { int ec = 0; double res = dll.lsl_time_correction(obj, timeout, ref ec); check_error(ec); return res; }
+        public double time_correction() { return time_correction(FOREVER); }
+        public double time_correction(double timeout) { int ec = 0; double res = dll.lsl_time_correction(obj, timeout, ref ec); check_error(ec); return res; }
 
         // =======================================
         // === Pulling a sample from the inlet ===
@@ -565,12 +614,18 @@ public class liblsl
         *          To remap this time stamp to the local clock, add the value returned by .time_correction() to it. 
         * @throws LostException (if the stream source has been lost).
         */
-        public double pull_sample(float[] sample, double timeout = FOREVER) { int ec = 0; double res = dll.lsl_pull_sample_f(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
-        public double pull_sample(double[] sample, double timeout = FOREVER) { int ec = 0; double res = dll.lsl_pull_sample_d(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
-        public double pull_sample(int[] sample, double timeout = FOREVER) { int ec = 0; double res = dll.lsl_pull_sample_i(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
-        public double pull_sample(short[] sample, double timeout = FOREVER) { int ec = 0; double res = dll.lsl_pull_sample_s(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
-        public double pull_sample(char[] sample, double timeout = FOREVER) { int ec = 0; double res = dll.lsl_pull_sample_c(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
-        public double pull_sample(string[] sample, double timeout = FOREVER) { 
+        public double pull_sample(float[] sample) { return pull_sample(sample, FOREVER);  }        
+        public double pull_sample(float[] sample, double timeout) { int ec = 0; double res = dll.lsl_pull_sample_f(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
+        public double pull_sample(double[] sample) { return pull_sample(sample, FOREVER); }
+        public double pull_sample(double[] sample, double timeout) { int ec = 0; double res = dll.lsl_pull_sample_d(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
+        public double pull_sample(int[] sample) { return pull_sample(sample, FOREVER); }
+        public double pull_sample(int[] sample, double timeout) { int ec = 0; double res = dll.lsl_pull_sample_i(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
+        public double pull_sample(short[] sample) { return pull_sample(sample, FOREVER); }
+        public double pull_sample(short[] sample, double timeout) { int ec = 0; double res = dll.lsl_pull_sample_s(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
+        public double pull_sample(char[] sample) { return pull_sample(sample, FOREVER); }
+        public double pull_sample(char[] sample, double timeout) { int ec = 0; double res = dll.lsl_pull_sample_c(obj, sample, sample.Length, timeout, ref ec); check_error(ec); return res; }
+        public double pull_sample(string[] sample) { return pull_sample(sample, FOREVER); }
+        public double pull_sample(string[] sample, double timeout) { 
             int ec = 0;
             IntPtr[] tmp = new IntPtr[sample.Length];
             double res = dll.lsl_pull_sample_str(obj, tmp, tmp.Length, timeout, ref ec); check_error(ec);
@@ -599,12 +654,18 @@ public class liblsl
         * @return samples_written Number of samples written to the data and timestamp buffers.
         * @throws LostException (if the stream source has been lost).
         */
-        public int pull_chunk(float[,] data_buffer, double[] timestamp_buffer, double timeout = 0.0) { int ec = 0; uint res = dll.lsl_pull_chunk_f(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
-        public int pull_chunk(double[,] data_buffer, double[] timestamp_buffer, double timeout = 0.0) { int ec = 0; uint res = dll.lsl_pull_chunk_d(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
-        public int pull_chunk(int[,] data_buffer, double[] timestamp_buffer, double timeout = 0.0) { int ec = 0; uint res = dll.lsl_pull_chunk_i(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
-        public int pull_chunk(short[,] data_buffer, double[] timestamp_buffer, double timeout = 0.0) { int ec = 0; uint res = dll.lsl_pull_chunk_s(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
-        public int pull_chunk(char[,] data_buffer, double[] timestamp_buffer, double timeout = 0.0) { int ec = 0; uint res = dll.lsl_pull_chunk_c(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
-        public int pull_chunk(string[,] data_buffer, double[] timestamp_buffer, double timeout = 0.0) { 
+        public int pull_chunk(float[,] data_buffer, double[] timestamp_buffer) { return pull_chunk(data_buffer, timestamp_buffer, 0.0); }
+        public int pull_chunk(float[,] data_buffer, double[] timestamp_buffer, double timeout) { int ec = 0; uint res = dll.lsl_pull_chunk_f(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
+        public int pull_chunk(double[,] data_buffer, double[] timestamp_buffer) { return pull_chunk(data_buffer, timestamp_buffer, 0.0); }
+        public int pull_chunk(double[,] data_buffer, double[] timestamp_buffer, double timeout) { int ec = 0; uint res = dll.lsl_pull_chunk_d(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
+        public int pull_chunk(int[,] data_buffer, double[] timestamp_buffer) { return pull_chunk(data_buffer, timestamp_buffer, 0.0); }
+        public int pull_chunk(int[,] data_buffer, double[] timestamp_buffer, double timeout) { int ec = 0; uint res = dll.lsl_pull_chunk_i(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
+        public int pull_chunk(short[,] data_buffer, double[] timestamp_buffer) { return pull_chunk(data_buffer, timestamp_buffer, 0.0); }
+        public int pull_chunk(short[,] data_buffer, double[] timestamp_buffer, double timeout) { int ec = 0; uint res = dll.lsl_pull_chunk_s(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
+        public int pull_chunk(char[,] data_buffer, double[] timestamp_buffer) { return pull_chunk(data_buffer, timestamp_buffer, 0.0); }
+        public int pull_chunk(char[,] data_buffer, double[] timestamp_buffer, double timeout) { int ec = 0; uint res = dll.lsl_pull_chunk_c(obj, data_buffer, timestamp_buffer, (uint)data_buffer.Length, (uint)timestamp_buffer.Length, timeout, ref ec); check_error(ec); return (int)res / data_buffer.GetLength(1); }
+        public int pull_chunk(string[,] data_buffer, double[] timestamp_buffer) { return pull_chunk(data_buffer, timestamp_buffer, 0.0); }
+        public int pull_chunk(string[,] data_buffer, double[] timestamp_buffer, double timeout) { 
             int ec = 0;
             IntPtr[,] tmp = new IntPtr[data_buffer.GetLength(0),data_buffer.GetLength(1)];
             uint res = dll.lsl_pull_chunk_str(obj, tmp, timestamp_buffer, (uint)tmp.Length, (uint)timestamp_buffer.Length, timeout, ref ec);
@@ -866,328 +927,335 @@ public class liblsl
 
 
 
-    // === Internal: C library function definitions. ===
+	// === Internal: C library function definitions. ===
 
-    class dll
-    {
+	class dll
+	{
 
-#if (UNITY_EDITOR_LINUX && UNITY_EDITOR_64)
-            const string libname = "liblsl64.so";
-#elif UNITY_EDITOR_LINUX
-            const string libname = "liblsl32.so";
-#elif (UNITY_EDITOR_WIN && UNITY_EDITOR_64)
-            const string libname = "liblsl64";
+#if (UNITY_EDITOR_WIN && UNITY_EDITOR_64)
+		const string libname = "liblsl64";
 #elif UNITY_EDITOR_WIN
-            const string libname = "liblsl32";
+		const string libname = "liblsl32";
+#elif UNITY_STANDALONE_WIN
+		// a build hook will took care that the correct dll will be renamed after a successfull build 
+		const string libname =  "liblsl";
+#elif (UNITY_EDITOR_LINUX && UNITY_EDITOR_64) || UNITY_STANDALONE_LINUX
+	   const string libname = "liblsl64.so";
+#elif UNITY_EDITOR_LINUX
+	   const string libname = "liblsl32.so";
+#elif UNITY_STANDALONE_LINUX
+	   const string libname =  "liblsl.so";
+#elif Unity_EDITOR_OSX || UNITY_STANDALONE_OSX
+	   //32-bit dylib no longer provided.
+	   const string libname = "liblsl64";
+#elif UNITY_STANDALONE_OSX
+	   const string libname = "liblsl";
 #elif UNITY_ANDROID
-            const string libname = "lslAndroid";
-#else
-            // Name of the binary to include -- replace this if the native library has a differentname
-            const string libname = "lsl";
+	   const string libname = "lslAndroid";
 #endif
-            
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_protocol_version();
 
         [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_library_version();
+		public static extern int lsl_protocol_version();
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_local_clock();
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_library_version();
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_create_streaminfo(string name, string type, int channel_count, double nominal_srate, channel_format_t channel_format, string source_id);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_local_clock();
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_destroy_streaminfo(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_create_streaminfo(string name, string type, int channel_count, double nominal_srate, channel_format_t channel_format, string source_id);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_name(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_destroy_streaminfo(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_type(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_name(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_get_channel_count(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_type(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_get_nominal_srate(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_get_channel_count(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern channel_format_t lsl_get_channel_format(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_get_nominal_srate(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_source_id(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern channel_format_t lsl_get_channel_format(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_get_version(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_source_id(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_get_created_at(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_get_version(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_uid(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_get_created_at(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_session_id(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_uid(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_hostname(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_session_id(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_desc(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_hostname(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_xml(IntPtr info);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_desc(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_create_outlet(IntPtr info, int chunk_size, int max_buffered);
- 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_destroy_outlet(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_xml(IntPtr info);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_sample_ftp(IntPtr obj, float[] data, double timestamp, int pushthrough);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_create_outlet(IntPtr info, int chunk_size, int max_buffered);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_sample_dtp(IntPtr obj, double[] data, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_sample_itp(IntPtr obj, int[] data, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_sample_stp(IntPtr obj, short[] data, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_sample_ctp(IntPtr obj, char[] data, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_sample_strtp(IntPtr obj, string[] data, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_sample_buftp(IntPtr obj, char[][] data, uint[] lengths, double timestamp, int pushthrough);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_destroy_outlet(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_ftp(IntPtr obj, float[,] data, uint data_elements, double timestamp, int pushthrough);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_sample_ftp(IntPtr obj, float[] data, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_ftnp(IntPtr obj, float[,] data, uint data_elements, double[] timestamps, int pushthrough);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_sample_dtp(IntPtr obj, double[] data, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_dtp(IntPtr obj, double[,] data, uint data_elements, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_dtnp(IntPtr obj, double[,] data, uint data_elements, double[] timestamps, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_itp(IntPtr obj, int[,] data, uint data_elements, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_itnp(IntPtr obj, int[,] data, uint data_elements, double[] timestamps, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_stp(IntPtr obj, short[,] data, uint data_elements, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_stnp(IntPtr obj, short[,] data, uint data_elements, double[] timestamps, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_ctp(IntPtr obj, char[,] data, uint data_elements, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_ctnp(IntPtr obj, char[,] data, uint data_elements, double[] timestamps, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_strtp(IntPtr obj, string[,] data, uint data_elements, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_strtnp(IntPtr obj, string[,] data, uint data_elements, double[] timestamps, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_buftp(IntPtr obj, char[][] data, uint[] lengths, uint data_elements, double timestamp, int pushthrough);
-        
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_push_chunk_buftnp(IntPtr obj, char[][] data, uint[] lengths, uint data_elements, double[] timestamps, int pushthrough);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_sample_itp(IntPtr obj, int[] data, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_have_consumers(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_sample_stp(IntPtr obj, short[] data, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_wait_for_consumers(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_sample_ctp(IntPtr obj, char[] data, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_info(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_sample_strtp(IntPtr obj, string[] data, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_resolve_all(IntPtr[] buffer, uint buffer_elements, double wait_time);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_sample_buftp(IntPtr obj, char[][] data, uint[] lengths, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_resolve_byprop(IntPtr[] buffer, uint buffer_elements, string prop, string value, int minimum, double wait_time);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_ftp(IntPtr obj, float[,] data, uint data_elements, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_resolve_bypred(IntPtr[] buffer, uint buffer_elements, string pred, int minimum, double wait_time);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_ftnp(IntPtr obj, float[,] data, uint data_elements, double[] timestamps, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_create_inlet(IntPtr info, int max_buflen, int max_chunklen, int recover);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_dtp(IntPtr obj, double[,] data, uint data_elements, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_destroy_inlet(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_dtnp(IntPtr obj, double[,] data, uint data_elements, double[] timestamps, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_get_fullinfo(IntPtr obj, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_itp(IntPtr obj, int[,] data, uint data_elements, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_open_stream(IntPtr obj, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_itnp(IntPtr obj, int[,] data, uint data_elements, double[] timestamps, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_close_stream(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_stp(IntPtr obj, short[,] data, uint data_elements, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_time_correction(IntPtr obj, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_stnp(IntPtr obj, short[,] data, uint data_elements, double[] timestamps, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_set_postprocessing(IntPtr obj, processing_options_t flags);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_ctp(IntPtr obj, char[,] data, uint data_elements, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_pull_sample_f(IntPtr obj, float[] buffer, int buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_ctnp(IntPtr obj, char[,] data, uint data_elements, double[] timestamps, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_pull_sample_d(IntPtr obj, double[] buffer, int buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_strtp(IntPtr obj, string[,] data, uint data_elements, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_pull_sample_i(IntPtr obj, int[] buffer, int buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_strtnp(IntPtr obj, string[,] data, uint data_elements, double[] timestamps, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_pull_sample_s(IntPtr obj, short[] buffer, int buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_buftp(IntPtr obj, char[][] data, uint[] lengths, uint data_elements, double timestamp, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_pull_sample_c(IntPtr obj, char[] buffer, int buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_push_chunk_buftnp(IntPtr obj, char[][] data, uint[] lengths, uint data_elements, double[] timestamps, int pushthrough);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_pull_sample_str(IntPtr obj, IntPtr[] buffer, int buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_have_consumers(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern double lsl_pull_sample_buf(IntPtr obj, char[][] buffer, uint[] buffer_lengths, int buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_wait_for_consumers(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_destroy_string(IntPtr str);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_info(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_pull_chunk_f(IntPtr obj, float[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_resolve_all(IntPtr[] buffer, uint buffer_elements, double wait_time);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_pull_chunk_d(IntPtr obj, double[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_resolve_byprop(IntPtr[] buffer, uint buffer_elements, string prop, string value, int minimum, double wait_time);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_pull_chunk_i(IntPtr obj, int[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_resolve_bypred(IntPtr[] buffer, uint buffer_elements, string pred, int minimum, double wait_time);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_pull_chunk_s(IntPtr obj, short[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_create_inlet(IntPtr info, int max_buflen, int max_chunklen, int recover);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_pull_chunk_c(IntPtr obj, char[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_destroy_inlet(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_pull_chunk_str(IntPtr obj, IntPtr[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_get_fullinfo(IntPtr obj, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_pull_chunk_buf(IntPtr obj, char[][,] data_buffer, uint[,] lengths_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_open_stream(IntPtr obj, double timeout, ref int ec);
+		
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_set_postprocessing(IntPtr obj, processing_options_t processing_flags);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_samples_available(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_close_stream(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern uint lsl_was_clock_reset(IntPtr obj);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_time_correction(IntPtr obj, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]        
-        public static extern IntPtr lsl_first_child(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_pull_sample_f(IntPtr obj, float[] buffer, int buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_last_child(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_pull_sample_d(IntPtr obj, double[] buffer, int buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_next_sibling(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_pull_sample_i(IntPtr obj, int[] buffer, int buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_previous_sibling(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_pull_sample_s(IntPtr obj, short[] buffer, int buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_parent(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_pull_sample_c(IntPtr obj, char[] buffer, int buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_child(IntPtr e, string name);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_pull_sample_str(IntPtr obj, IntPtr[] buffer, int buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_next_sibling_n(IntPtr e, string name);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern double lsl_pull_sample_buf(IntPtr obj, char[][] buffer, uint[] buffer_lengths, int buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_previous_sibling_n(IntPtr e, string name);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_destroy_string(IntPtr str);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_empty(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_pull_chunk_f(IntPtr obj, float[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int  lsl_is_text(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_pull_chunk_d(IntPtr obj, double[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_name(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_pull_chunk_i(IntPtr obj, int[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_value(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_pull_chunk_s(IntPtr obj, short[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_child_value(IntPtr e);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_pull_chunk_c(IntPtr obj, char[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_child_value_n(IntPtr e, string name);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_pull_chunk_str(IntPtr obj, IntPtr[,] data_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_append_child_value(IntPtr e, string name, string value);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_pull_chunk_buf(IntPtr obj, char[][,] data_buffer, uint[,] lengths_buffer, double[] timestamp_buffer, uint data_buffer_elements, uint timestamp_buffer_elements, double timeout, ref int ec);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_prepend_child_value(IntPtr e, string name, string value);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_samples_available(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_set_child_value(IntPtr e, string name, string value);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern uint lsl_was_clock_reset(IntPtr obj);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_set_name(IntPtr e, string rhs);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_first_child(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_set_value(IntPtr e, string rhs);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_last_child(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_append_child(IntPtr e, string name);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_next_sibling(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_prepend_child(IntPtr e, string name);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_previous_sibling(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_append_copy(IntPtr e, IntPtr e2);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_parent(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_prepend_copy(IntPtr e, IntPtr e2);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_child(IntPtr e, string name);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_remove_child_n(IntPtr e, string name);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_next_sibling_n(IntPtr e, string name);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_remove_child(IntPtr e, IntPtr e2);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_previous_sibling_n(IntPtr e, string name);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_create_continuous_resolver(double forget_after);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_empty(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_create_continuous_resolver_byprop(string prop, string value, double forget_after);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_is_text(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern IntPtr lsl_create_continuous_resolver_bypred(string pred, double forget_after);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_name(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern int lsl_resolver_results(IntPtr obj, IntPtr[] buffer, uint buffer_elements);
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_value(IntPtr e);
 
-        [DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
-        public static extern void lsl_destroy_continuous_resolver(IntPtr obj);
-    }
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_child_value(IntPtr e);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_child_value_n(IntPtr e, string name);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_append_child_value(IntPtr e, string name, string value);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_prepend_child_value(IntPtr e, string name, string value);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_set_child_value(IntPtr e, string name, string value);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_set_name(IntPtr e, string rhs);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_set_value(IntPtr e, string rhs);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_append_child(IntPtr e, string name);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_prepend_child(IntPtr e, string name);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_append_copy(IntPtr e, IntPtr e2);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_prepend_copy(IntPtr e, IntPtr e2);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_remove_child_n(IntPtr e, string name);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_remove_child(IntPtr e, IntPtr e2);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_create_continuous_resolver(double forget_after);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_create_continuous_resolver_byprop(string prop, string value, double forget_after);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern IntPtr lsl_create_continuous_resolver_bypred(string pred, double forget_after);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern int lsl_resolver_results(IntPtr obj, IntPtr[] buffer, uint buffer_elements);
+
+		[DllImport(libname, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi, ExactSpelling = true)]
+		public static extern void lsl_destroy_continuous_resolver(IntPtr obj);
+	}
 }
 }

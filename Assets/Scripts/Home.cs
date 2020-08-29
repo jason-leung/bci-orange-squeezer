@@ -12,6 +12,9 @@ public class Home : MonoBehaviour
     public GameObject howtoplay_backButton;
     public GameObject howtoplay_nextButton;
     public int pageNumber;
+    public GameObject settings_panel;
+    public GameObject settings_emgMax_slider;
+    public GameObject settings_emgMax_value;
 
     void Start()
     {
@@ -21,6 +24,15 @@ public class Home : MonoBehaviour
         howtoplay_nextButton = howtoplay_panel.transform.Find("Next_Button").gameObject;
         pageNumber = System.Int32.Parse(howtoplay_pageNumber.GetComponent<Text>().text);
         howtoplay_backButton.SetActive(false);
+    }
+
+    private void Awake()
+    {
+        settings_panel = FindObjectOfType<Canvas>().transform.Find("Settings_Panel").gameObject;
+        settings_emgMax_slider = settings_panel.transform.Find("EMG_Max").transform.Find("Slider").gameObject;
+        settings_emgMax_value = settings_panel.transform.Find("EMG_Max").transform.Find("Value").gameObject;
+
+        if (PlayerPrefs.HasKey("EMG_max")) settings_emgMax_slider.GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_max");
     }
 
     public void ExitApplication()
@@ -64,5 +76,17 @@ public class Home : MonoBehaviour
         howtoplay_nextButton.SetActive(pageNumber != 9);
 
         for (int i = 1; i <= 9; i++) howtoplay_panel.transform.Find("Page" + i).gameObject.SetActive(i == pageNumber);
+    }
+
+    public void Settings()
+    {
+        settings_panel.SetActive(!settings_panel.activeSelf);
+    }
+
+    public void OnSetEMGSlider()
+    {
+        double emg_max = System.Math.Round(settings_emgMax_slider.GetComponent<Slider>().value, 2);
+        settings_emgMax_value.GetComponent<Text>().text = emg_max.ToString("n2") + " V";
+        PlayerPrefs.SetFloat("EMG_max", (float)emg_max);
     }
 }

@@ -74,7 +74,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "cue_ready")
                 {
-                    lslHandler.SendLSLStringMarker("cue_ready");
+                    lslHandler.Send_LSL_StringMarker("cue_ready");
                     state = "cue_ready";
                 }
                 cueReady.SetActive(true);
@@ -87,7 +87,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "cue_go")
                 {
-                    lslHandler.SendLSLStringMarker("cue_go");
+                    lslHandler.Send_LSL_StringMarker("cue_go");
                     state = "cue_go";
                 }
                 cueReady.SetActive(false);
@@ -100,7 +100,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "task")
                 {
-                    lslHandler.SendLSLStringMarker("task");
+                    lslHandler.Send_LSL_StringMarker("task");
                     state = "task";
                 }
                 cueReady.SetActive(false);
@@ -113,7 +113,7 @@ public class BlockManager : MonoBehaviour
             {
                 if (state != "rest")
                 {
-                    lslHandler.SendLSLStringMarker("rest");
+                    lslHandler.Send_LSL_StringMarker("rest");
                     state = "rest";
                 }
                 cueReady.SetActive(false);
@@ -148,7 +148,7 @@ public class BlockManager : MonoBehaviour
                     else
                     {
                         sessionOverPanel.SetActive(true);
-                        lslHandler.SendLSLStringMarker("END");
+                        lslHandler.Send_LSL_StringMarker("END");
                     }
                 }
             }
@@ -206,7 +206,7 @@ public class BlockManager : MonoBehaviour
         trialStartTime = DateTime.Now;
         juiceController.ResetJuiceSpawner();
         state = "";
-        lslHandler.SendLSLStringMarker("start_block_" + block_number + "_" + blocks[block_number] + "_trial_" + trial_number + "_" + trials[block_number][trial_number]);
+        lslHandler.Send_LSL_StringMarker("start_block_" + block_number + "_" + blocks[block_number] + "_trial_" + trial_number + "_" + trials[block_number][trial_number]);
     }
 
     public void ReturnToHome()

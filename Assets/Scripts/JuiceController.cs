@@ -11,6 +11,9 @@ public class JuiceController : MonoBehaviour
     public GameObject orange_left;
     public Water2D_Spawner waterSpawner_right;
     public Water2D_Spawner waterSpawner_left;
+    public LSLHandler lslHandler;
+    public float[] emg_data;
+    public int[] emg_magnitude;
 
     // Start is called before the first frame update
     void Start()
@@ -18,6 +21,7 @@ public class JuiceController : MonoBehaviour
         // Find UI compoenents
         waterSpawner_right = GameObject.Find("Right").transform.Find("Water2D_spawner").GetComponent<Water2D_Spawner>();
         waterSpawner_left = GameObject.Find("Left").transform.Find("Water2D_spawner").GetComponent<Water2D_Spawner>();
+        lslHandler = GameObject.Find("LSLHandler").GetComponent<LSLHandler>();
 
         // Initialize Input Keys
         key_alpha = new List<KeyCode>();
@@ -50,12 +54,17 @@ public class JuiceController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Stop and Restore
-        if (Input.GetKey(KeyCode.R))
+        /*
+        // Get EMG data
+        emg_data = lslHandler.Get_LSL_EMGData();
+        // take absolute value, divide by EMG_max, multiple by 9, and round to nearest integer
+        for(int i = 0; i < 2; i++)
         {
-            ResetJuiceSpawner();
-            return;
+            emg_magnitude[i] = (int) System.Math.Round(System.Math.Abs(emg_data[i]) / PlayerPrefs.GetFloat("EMG_max") * 9f);
         }
+        */
+        
+
 
         // case 1-9: adjust water amount based on numeric key press by changing delay from 0.3 to 0.05
         for (int i = 1; i <= 9; i++)
