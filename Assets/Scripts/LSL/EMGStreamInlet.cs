@@ -1,20 +1,30 @@
 ﻿using System.Collections; 
 using UnityEngine; 
 using Assets.LSL4Unity.Scripts.AbstractInlets;
+using System;
 
 namespace Assets.LSL4Unity.Scripts.Examples {
 
     public class EMGStreamInlet : InletFloatSamples
     {
-        private bool pullSamplesContinuously = false;
-        // public float[] emgSample;
+        public bool pullSamplesContinuously = false;
+        public float[] emgSample;
+        public float[] emgProcessed;
+        float emg_max = 11f;
+        bool processingSample = false;
+        DateTime lastProcessTime = DateTime.Now;
+
+        public JuiceController juiceController;
 
         void Start()
         {
             // [optional] call this only, if your gameobject hosting this component
             // got instantiated during runtime
-            
+
             // registerAndLookUpStream();
+            juiceController = FindObjectOfType<JuiceController>();
+            emgProcessed = new float[2];
+            emg_max = PlayerPrefs.GetFloat("EMG_max");
         }
 
         protected override bool isTheExpected(LSLStreamInfoWrapper stream)
@@ -36,10 +46,12 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         /// <param name="timeStamp"></param>
         protected override void Process(float[] newSample, double timeStamp)
         {
-            // emgSample = newSample;
-            float x = newSample[0];
-            float y = newSample[1];
-            Debug.Log(x + "  " + y);
+            if (pullSamplesContinuously == false) return;
+            if (newSample.Length < 2) return;
+            if (processingSample) return;
+            if (DateTime.Now.Subtract(lastProcessTime).TotalMilliseconds <= 100) return;
+
+            StartCoroutine(ProcessEMGSample(newSample));
         }
 
         protected override void OnStreamAvailable()
@@ -56,6 +68,26 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         {
             if(pullSamplesContinuously)
                 pullSamples();
+        }
+
+        IEnumerator ProcessEMGSample(float[] newSample)
+        {
+            processingSample = true;
+            lastProcessTime = DateTime.Now;
+
+            emgSample = newSample;
+
+            for (int i = 0; i < 2; i++)
+                emgProcessed[i] = System.Math.Min(System.Math.Abs(emgSample[i]), emg_max) / emg_max * 9f;
+
+            if (emgProcessed[0] <= 1f) juiceController.StopSqueezeLeft();
+            else juiceController.SqueezeLeft(emgProcessed[0]);
+            if (emgProcessed[1] <= 1f) juiceController.StopSqueezeRight();
+            else juiceController.SqueezeRight(emgProcessed[1]);
+
+            processingSample = false;
+
+            yield break;
         }
     }
 }

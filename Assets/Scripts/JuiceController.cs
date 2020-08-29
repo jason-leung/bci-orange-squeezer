@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Assets.LSL4Unity.Scripts.Examples;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Water2D;
@@ -12,12 +13,17 @@ public class JuiceController : MonoBehaviour
     public Water2D_Spawner waterSpawner_right;
     public Water2D_Spawner waterSpawner_left;
 
+    public BlockManager blockManager;
+
     // Start is called before the first frame update
     void Start()
     {
         // Find UI compoenents
         waterSpawner_right = GameObject.Find("Right").transform.Find("Water2D_spawner").GetComponent<Water2D_Spawner>();
         waterSpawner_left = GameObject.Find("Left").transform.Find("Water2D_spawner").GetComponent<Water2D_Spawner>();
+
+        // Find classes
+        blockManager = FindObjectOfType<BlockManager>();
 
         // Initialize Input Keys
         key_alpha = new List<KeyCode>();
@@ -50,34 +56,60 @@ public class JuiceController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // case 1-9: adjust water amount based on numeric key press by changing delay from 0.3 to 0.05
+        // case 1-9: adjust water amount based on numeric key press
         for (int i = 1; i <= 9; i++)
         {
             // Use keypad numbers for right hand
             if (Input.GetKey(key_keypad[i]))
             {
-                orange_right.transform.localScale = new Vector3(0.5f - (i * (0.15f / 9f)), 0.5f, 1f);
-                waterSpawner_right.DelayBetweenParticles = 10f-i;
-                waterSpawner_right.initSpeed = new Vector2(UnityEngine.Random.Range(-0.5f, 0.5f), -2f);
-                waterSpawner_right.Spawn();
+                SqueezeRight(i);
                 return;
             }
 
             // Use alpha numbers for left hand
             if (Input.GetKey(key_alpha[i]))
             {
-                orange_left.transform.localScale = new Vector3(-0.5f + (i * (0.15f / 9f)), 0.5f, 1f);
-                waterSpawner_left.DelayBetweenParticles = 10f - i;
-                waterSpawner_left.initSpeed = new Vector2(UnityEngine.Random.Range(-0.5f, 0.5f), -2f);
-                waterSpawner_left.Spawn();
+                SqueezeLeft(i);
                 return;
             }
         }
 
         // base case: turn off water when 0 or nothing pressed
-        orange_right.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
-        orange_left.transform.localScale = new Vector3(-0.5f, 0.5f, 1f);
-        waterSpawner_right._breakLoop = true;
+        StopSqueezeLeft();
+        StopSqueezeRight();
+    }
+
+    public void StopSqueezeLeft()
+    {
+        orange_left.transform.localScale = new Vector3(-0.5f, 0.5f, 1f); 
         waterSpawner_left._breakLoop = true;
+    }
+
+    public void StopSqueezeRight()
+    {
+        orange_right.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
+        waterSpawner_right._breakLoop = true;
+    }
+
+    public void SqueezeLeft(float magnitude)
+    {
+        if (blockManager.state == "task")
+        {
+            orange_left.transform.localScale = new Vector3(-0.5f + (magnitude * (0.15f / 9f)), 0.5f, 1f);
+            waterSpawner_left.DelayBetweenParticles = 10f - magnitude;
+            waterSpawner_left.initSpeed = new Vector2(UnityEngine.Random.Range(-0.5f, 0.5f), -2f);
+            waterSpawner_left.Spawn();
+        }
+    }
+
+    public void SqueezeRight(float magnitude)
+    {
+        if (blockManager.state == "task")
+        {
+            orange_right.transform.localScale = new Vector3(0.5f - (magnitude * (0.15f / 9f)), 0.5f, 1f);
+            waterSpawner_right.DelayBetweenParticles = 10f - magnitude;
+            waterSpawner_right.initSpeed = new Vector2(UnityEngine.Random.Range(-0.5f, 0.5f), -2f);
+            waterSpawner_right.Spawn();
+        }
     }
 }
