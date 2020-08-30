@@ -15,6 +15,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         DateTime lastProcessTime = DateTime.Now;
 
         public JuiceController juiceController;
+        public FileWriter fileWriter;
 
         void Start()
         {
@@ -23,6 +24,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
 
             // registerAndLookUpStream();
             juiceController = FindObjectOfType<JuiceController>();
+            fileWriter = FindObjectOfType<FileWriter>();
             emgProcessed = new float[2];
             emg_max = PlayerPrefs.GetFloat("EMG_max");
         }
@@ -76,6 +78,8 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             lastProcessTime = DateTime.Now;
 
             emgSample = newSample;
+
+            fileWriter.WriteEMG(DateTime.Now.ToOADate(), newSample);
 
             for (int i = 0; i < 2; i++)
                 emgProcessed[i] = System.Math.Min(System.Math.Abs(emgSample[i]), emg_max) / emg_max * 9f;

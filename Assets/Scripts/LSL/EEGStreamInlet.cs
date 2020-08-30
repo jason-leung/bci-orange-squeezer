@@ -11,7 +11,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         public int numberOfChannels = 64;
         public float[] eegSample;
 
-        public JuiceController juiceController;
+        public FileWriter fileWriter;
 
         void Start()
         {
@@ -19,6 +19,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             // got instantiated during runtime
 
             // registerAndLookUpStream();
+            fileWriter = FindObjectOfType<FileWriter>();
         }
 
         protected override bool isTheExpected(LSLStreamInfoWrapper stream)
@@ -44,7 +45,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             if (newSample.Length < numberOfChannels) return;
 
             eegSample = newSample;
-            // StartCoroutine(ProcessEMGSample(newSample));
+            StartCoroutine(ProcessEEGSample(timeStamp, newSample));
         }
 
         protected override void OnStreamAvailable()
@@ -63,26 +64,11 @@ namespace Assets.LSL4Unity.Scripts.Examples {
                 pullSamples();
         }
 
-        /*
-        IEnumerator ProcessEMGSample(float[] newSample)
+        IEnumerator ProcessEEGSample(double timestamp, float[] newSample)
         {
-            processingSample = true;
-            lastProcessTime = DateTime.Now;
-
-            emgSample = newSample;
-
-            for (int i = 0; i < 2; i++)
-                emgProcessed[i] = System.Math.Min(System.Math.Abs(emgSample[i]), emg_max) / emg_max * 9f;
-
-            if (emgProcessed[0] <= 1f) juiceController.StopSqueezeLeft();
-            else juiceController.SqueezeLeft(emgProcessed[0]);
-            if (emgProcessed[1] <= 1f) juiceController.StopSqueezeRight();
-            else juiceController.SqueezeRight(emgProcessed[1]);
-
-            processingSample = false;
+            fileWriter.WriteEEG(timestamp, newSample);
 
             yield break;
         }
-        */
     }
 }
