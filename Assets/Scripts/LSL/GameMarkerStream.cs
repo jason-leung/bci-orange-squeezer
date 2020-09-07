@@ -24,8 +24,6 @@ namespace Assets.LSL4Unity.Scripts
 
         private string[] sample;
 
-        public FileWriter fileWriter;
-
         void Awake()
         {
             sample = new string[lslChannelCount];
@@ -39,8 +37,6 @@ namespace Assets.LSL4Unity.Scripts
                                         unique_source_id);
             
             lslOutlet = new liblsl.StreamOutlet(lslStreamInfo);
-
-            fileWriter = FindObjectOfType<FileWriter>();
         }
 
         public void Write(string marker)
@@ -68,8 +64,7 @@ namespace Assets.LSL4Unity.Scripts
 
         public void WriteGameMarker(string marker)
         {
-            // Write(marker, DateTime.Now.ToOADate());
-            fileWriter.WriteGameMarker(DateTime.Now.ToOADate(), marker);
+            Write(marker, DateTime.Now.ToOADate());
         }
 
         IEnumerator WriteMarkerAfterImageIsRendered(string pendingMarker)

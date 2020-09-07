@@ -14,7 +14,7 @@ public class BlockManager : MonoBehaviour
     public List<List<string>> trials;
     public int trials_per_block;
     public int block_number;
-    private int trial_number;
+    public int trial_number;
     bool trialStarted;
     float trialStartTime;
     public List<List<float>> trial_timings;
@@ -120,6 +120,9 @@ public class BlockManager : MonoBehaviour
                 {
                     gameMarkerStream.WriteGameMarker("rest");
                     state = "rest";
+                    juiceController.ResetJuiceSpawner();
+                    juiceController.StopSqueezeLeft();
+                    juiceController.StopSqueezeRight();
                 }
                 cueReady.SetActive(false);
                 cueGo.SetActive(false);
@@ -210,6 +213,8 @@ public class BlockManager : MonoBehaviour
         trialStarted = true;
         trialStartTime = Time.time;
         juiceController.ResetJuiceSpawner();
+        juiceController.StopSqueezeLeft();
+        juiceController.StopSqueezeRight();
         state = "";
         gameMarkerStream.WriteGameMarker("start_block_" + block_number + "_" + blocks[block_number] + "_trial_" + trial_number + "_" + trials[block_number][trial_number]);
     }

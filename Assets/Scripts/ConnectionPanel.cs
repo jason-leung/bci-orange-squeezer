@@ -21,7 +21,7 @@ public class ConnectionPanel : MonoBehaviour
     public bool isEEGConnected = false;
     public bool pauseGame = true;
 
-    public GameMarkerStream gameMarkerStream; 
+    public GameMarkerStream gameMarkerStream;
     public EMGStreamInlet emgStreamInlet;
     public EEGStreamInlet eegStreamInlet;
 
@@ -35,7 +35,7 @@ public class ConnectionPanel : MonoBehaviour
         eeg = connectionPanel.transform.Find("EEG").gameObject;
         continueButton = connectionPanel.transform.Find("Continue_Button").gameObject;
 
-        gameMarkerStream = FindObjectOfType<GameMarkerStream>(); 
+        gameMarkerStream = FindObjectOfType<GameMarkerStream>();
         emgStreamInlet = FindObjectOfType<EMGStreamInlet>();
         eegStreamInlet = FindObjectOfType<EEGStreamInlet>();
     }
@@ -55,7 +55,7 @@ public class ConnectionPanel : MonoBehaviour
         {
             // Stop time and send marker
             Time.timeScale = 0f;
-            gameMarkerStream.WriteGameMarker("conection_lost");
+            // gameMarkerStream.WriteGameMarker("conection_lost");
 
             // update UI
             connectionPanel.SetActive(true);
@@ -84,7 +84,7 @@ public class ConnectionPanel : MonoBehaviour
     {
         pauseGame = false;
         connectionPanel.SetActive(false);
-        gameMarkerStream.WriteGameMarker("conection_found");
+        gameMarkerStream.WriteGameMarker("conections initialized");
         Time.timeScale = 1f;
     }
 }

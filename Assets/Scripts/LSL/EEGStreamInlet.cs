@@ -11,7 +11,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         public int numberOfChannels = 64;
         public float[] eegSample;
 
-        public FileWriter fileWriter;
+        public GameMarkerStream gameMarkerStream;
 
         void Start()
         {
@@ -19,7 +19,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             // got instantiated during runtime
 
             // registerAndLookUpStream();
-            fileWriter = FindObjectOfType<FileWriter>();
+            gameMarkerStream = FindObjectOfType<GameMarkerStream>();
         }
 
         protected override bool isTheExpected(LSLStreamInfoWrapper stream)
@@ -51,11 +51,13 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         protected override void OnStreamAvailable()
         {
             pullSamplesContinuously = true;
+            gameMarkerStream.WriteGameMarker("EEG stream found");
         }
 
         protected override void OnStreamLost()
         {
             pullSamplesContinuously = false;
+            gameMarkerStream.WriteGameMarker("EEG stream lost");
         }
          
         private void Update()
@@ -66,8 +68,6 @@ namespace Assets.LSL4Unity.Scripts.Examples {
 
         IEnumerator ProcessEEGSample(double timestamp, float[] newSample)
         {
-            fileWriter.WriteEEG(timestamp, newSample);
-
             yield break;
         }
     }

@@ -10,12 +10,15 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         public bool pullSamplesContinuously = false;
         public float[] emgSample;
         public float[] emgProcessed;
+        
         float emg_max = 11f;
-        bool processingSample = false;
-        DateTime lastProcessTime = DateTime.Now;
+        float[] sample_max;
+        int sample_number = 0;
+        int window_size = 50;
 
         public JuiceController juiceController;
-        public FileWriter fileWriter;
+        public BlockManager blockManager;
+        public GameMarkerStream gameMarkerStream;
 
         void Start()
         {
@@ -24,9 +27,12 @@ namespace Assets.LSL4Unity.Scripts.Examples {
 
             // registerAndLookUpStream();
             juiceController = FindObjectOfType<JuiceController>();
-            fileWriter = FindObjectOfType<FileWriter>();
+            blockManager = FindObjectOfType<BlockManager>();
+            gameMarkerStream = FindObjectOfType<GameMarkerStream>();
+
             emgProcessed = new float[2];
             emg_max = PlayerPrefs.GetFloat("EMG_max");
+            sample_max = new float[2] { 0, 0 };
         }
 
         protected override bool isTheExpected(LSLStreamInfoWrapper stream)
@@ -48,22 +54,24 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         /// <param name="timeStamp"></param>
         protected override void Process(float[] newSample, double timeStamp)
         {
+            if (blockManager.block_number >= blockManager.blocks.Count) return;
+            if (blockManager.blocks[blockManager.block_number] != "ME") return;
             if (pullSamplesContinuously == false) return;
             if (newSample.Length < 2) return;
-            if (processingSample) return;
-            if (DateTime.Now.Subtract(lastProcessTime).TotalMilliseconds <= 100) return;
-
+            
             StartCoroutine(ProcessEMGSample(newSample));
         }
 
         protected override void OnStreamAvailable()
         {
             pullSamplesContinuously = true;
+            gameMarkerStream.WriteGameMarker("EMG stream found");
         }
 
         protected override void OnStreamLost()
         {
             pullSamplesContinuously = false;
+            gameMarkerStream.WriteGameMarker("EMG stream lost");
         }
          
         private void Update()
@@ -74,23 +82,27 @@ namespace Assets.LSL4Unity.Scripts.Examples {
 
         IEnumerator ProcessEMGSample(float[] newSample)
         {
-            processingSample = true;
-            lastProcessTime = DateTime.Now;
+            if (sample_number == window_size)
+            {
+                emgProcessed[0] = System.Math.Min(sample_max[0] / emg_max * 9f, 9f);
+                emgProcessed[1] = System.Math.Min(sample_max[1] / emg_max * 9f, 9f);
 
-            emgSample = newSample;
+                if (emgProcessed[0] <= 1f) juiceController.StopSqueezeLeft();
+                else juiceController.SqueezeLeft(emgProcessed[0]);
+                if (emgProcessed[1] <= 1f) juiceController.StopSqueezeRight();
+                else juiceController.SqueezeRight(emgProcessed[1]);
 
-            fileWriter.WriteEMG(DateTime.Now.ToOADate(), newSample);
+                sample_number = 0;
+                sample_max[0] = 0f;
+                sample_max[1] = 0f;
+            }
 
-            for (int i = 0; i < 2; i++)
-                emgProcessed[i] = System.Math.Min(System.Math.Abs(emgSample[i]), emg_max) / emg_max * 9f;
+            // emgSample = newSample;
 
-            if (emgProcessed[0] <= 1f) juiceController.StopSqueezeLeft();
-            else juiceController.SqueezeLeft(emgProcessed[0]);
-            if (emgProcessed[1] <= 1f) juiceController.StopSqueezeRight();
-            else juiceController.SqueezeRight(emgProcessed[1]);
+            sample_max[0] = System.Math.Max(System.Math.Abs(newSample[0]), sample_max[0]);
+            sample_max[1] = System.Math.Max(System.Math.Abs(newSample[1]), sample_max[1]);
 
-            processingSample = false;
-
+            sample_number += 1;
             yield break;
         }
     }

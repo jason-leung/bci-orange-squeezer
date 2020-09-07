@@ -74,9 +74,30 @@ public class JuiceController : MonoBehaviour
             }
         }
 
-        // base case: turn off water when 0 or nothing pressed
-        StopSqueezeLeft();
-        StopSqueezeRight();
+        // Manually trigger feedback when in MI mode
+        if (blockManager.block_number >= blockManager.blocks.Count) return;
+        if (blockManager.blocks[blockManager.block_number] == "MI")
+        {
+            if (blockManager.state == "task")
+            {
+                if (blockManager.trials[blockManager.block_number][blockManager.trial_number] == "l")
+                {
+                    StopSqueezeRight();
+                    SqueezeLeft(7f);
+                }
+                else
+                {
+                    StopSqueezeLeft();
+                    SqueezeRight(7f);
+                }
+            }
+            else
+            {
+                ResetJuiceSpawner();
+                StopSqueezeRight();
+                StopSqueezeLeft();
+            }
+        }
     }
 
     public void StopSqueezeLeft()
