@@ -11,7 +11,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         public float[] emgSample;
         public float[] emgProcessed;
         
-        float emg_max = 11f;
+        float[] emg_max;
         float[] sample_max;
         int sample_number = 0;
         int window_size = 50;
@@ -31,7 +31,9 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             gameMarkerStream = FindObjectOfType<GameMarkerStream>();
 
             emgProcessed = new float[2];
-            emg_max = PlayerPrefs.GetFloat("EMG_max");
+            emg_max = new float[2] { 0.011f, 0.011f };
+            if (PlayerPrefs.HasKey("EMG_Max_Left")) emg_max[0] = PlayerPrefs.GetFloat("EMG_Max_Left");
+            if (PlayerPrefs.HasKey("EMG_Max_Right")) emg_max[1] = PlayerPrefs.GetFloat("EMG_Max_Right");
             sample_max = new float[2] { 0, 0 };
         }
 
@@ -84,8 +86,8 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         {
             if (sample_number == window_size)
             {
-                emgProcessed[0] = System.Math.Min(sample_max[0] / emg_max * 9f, 9f);
-                emgProcessed[1] = System.Math.Min(sample_max[1] / emg_max * 9f, 9f);
+                emgProcessed[0] = System.Math.Min(sample_max[0] / emg_max[0] * 9f, 9f);
+                emgProcessed[1] = System.Math.Min(sample_max[1] / emg_max[1] * 9f, 9f);
 
                 if (emgProcessed[0] <= 1f) juiceController.StopSqueezeLeft();
                 else juiceController.SqueezeLeft(emgProcessed[0]);

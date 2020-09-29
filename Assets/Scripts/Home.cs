@@ -13,8 +13,8 @@ public class Home : MonoBehaviour
     public GameObject howtoplay_nextButton;
     public int pageNumber;
     public GameObject settings_panel;
-    public GameObject settings_emgMax_slider;
-    public GameObject settings_emgMax_value;
+    public GameObject[] settings_emgMax_slider;
+    public GameObject[] settings_emgMax_value;
 
     void Start()
     {
@@ -28,11 +28,16 @@ public class Home : MonoBehaviour
 
     private void Awake()
     {
+        settings_emgMax_slider = new GameObject[2];
+        settings_emgMax_value = new GameObject[2];
         settings_panel = FindObjectOfType<Canvas>().transform.Find("Settings_Panel").gameObject;
-        settings_emgMax_slider = settings_panel.transform.Find("EMG_Max").transform.Find("Slider").gameObject;
-        settings_emgMax_value = settings_panel.transform.Find("EMG_Max").transform.Find("Value").gameObject;
+        settings_emgMax_slider[0] = settings_panel.transform.Find("EMG_Max_Left").transform.Find("Slider").gameObject;
+        settings_emgMax_slider[1] = settings_panel.transform.Find("EMG_Max_Right").transform.Find("Slider").gameObject;
+        settings_emgMax_value[0] = settings_panel.transform.Find("EMG_Max_Left").transform.Find("Value").gameObject;
+        settings_emgMax_value[1] = settings_panel.transform.Find("EMG_Max_Right").transform.Find("Value").gameObject;
 
-        if (PlayerPrefs.HasKey("EMG_max")) settings_emgMax_slider.GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_max");
+        if (PlayerPrefs.HasKey("EMG_Max_Left")) settings_emgMax_slider[0].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Left");
+        if (PlayerPrefs.HasKey("EMG_Max_Right")) settings_emgMax_slider[1].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Right");
     }
 
     public void ExitApplication()
@@ -83,10 +88,12 @@ public class Home : MonoBehaviour
         settings_panel.SetActive(!settings_panel.activeSelf);
     }
 
-    public void OnSetEMGSlider()
+    public void OnSetEMGSlider(int side)
     {
-        double emg_max = System.Math.Round(settings_emgMax_slider.GetComponent<Slider>().value, 2);
-        settings_emgMax_value.GetComponent<Text>().text = emg_max.ToString("n2") + " V";
-        PlayerPrefs.SetFloat("EMG_max", (float)emg_max);
+        double emg_max = System.Math.Round(settings_emgMax_slider[side].GetComponent<Slider>().value, 2);
+        settings_emgMax_value[side].GetComponent<Text>().text = emg_max.ToString("n2") + " mV";
+        string prefKey = "EMG_Max_";
+        prefKey += (side == 0) ? "Left" : "Right";
+        PlayerPrefs.SetFloat(prefKey, (float)(emg_max / 1000f));
     }
 }
