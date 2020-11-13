@@ -36,12 +36,17 @@ public class Home : MonoBehaviour
         settings_emgMax_value[0] = settings_panel.transform.Find("EMG_Max_Left").transform.Find("Value").gameObject;
         settings_emgMax_value[1] = settings_panel.transform.Find("EMG_Max_Right").transform.Find("Value").gameObject;
 
-        if (PlayerPrefs.HasKey("EMG_Max_Left")) settings_emgMax_slider[0].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Left");
-        if (PlayerPrefs.HasKey("EMG_Max_Right")) settings_emgMax_slider[1].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Right");
+        // Default EMG MAX settings
+        if (!PlayerPrefs.HasKey("EMG_Max_Left")) PlayerPrefs.SetFloat("EMG_Max_Left", 11f / 1000f);
+        if (!PlayerPrefs.HasKey("EMG_Max_Right")) PlayerPrefs.SetFloat("EMG_Max_Right", 11f / 1000f);
+
+        if (PlayerPrefs.HasKey("EMG_Max_Left")) settings_emgMax_slider[0].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Left") * 1000f;
+        if (PlayerPrefs.HasKey("EMG_Max_Right")) settings_emgMax_slider[1].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Right") * 1000f;
     }
 
     public void ExitApplication()
     {
+        PlayerPrefs.DeleteAll(); 
         Application.Quit();
     }
 
