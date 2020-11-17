@@ -101,8 +101,15 @@ namespace Assets.LSL4Unity.Scripts.Examples {
 
             // emgSample = newSample;
 
+            // Left sensors
             sample_max[0] = System.Math.Max(System.Math.Abs(newSample[0]), sample_max[0]);
-            sample_max[1] = System.Math.Max(System.Math.Abs(newSample[1]), sample_max[1]);
+            sample_max[0] = System.Math.Max(System.Math.Abs(newSample[1]), sample_max[0]);
+            sample_max[0] = System.Math.Max(System.Math.Abs(newSample[2]), sample_max[0]);
+
+            // Right sensors
+            sample_max[1] = System.Math.Max(System.Math.Abs(newSample[3]), sample_max[1]);
+            sample_max[1] = System.Math.Max(System.Math.Abs(newSample[4]), sample_max[1]);
+            sample_max[1] = System.Math.Max(System.Math.Abs(newSample[5]), sample_max[1]);
 
             sample_number += 1;
             yield break;

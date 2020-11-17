@@ -50,11 +50,11 @@ public class BlockManager : MonoBehaviour
         gameMarkerStream = FindObjectOfType<GameMarkerStream>();
 
         // Initialize blocks and trials
-        // blocks = new List<string>() { "ME", "ME", "ME", "MI", "MI", "MI" };
-        blocks = new List<string>() { "ME", "MI" };
+        blocks = new List<string>() { "ME", "ME", "ME", "MI", "MI", "MI" };
+        // blocks = new List<string>() { "ME", "MI" };
         trials = new List<List<string>>();
-        // trials_per_block = 16;
-        trials_per_block = 2;
+        trials_per_block = 16;
+        // trials_per_block = 2;
         trial_timings = new List<List<float>>() { new List<float>() { 0f, 1f }, new List<float>() { 1f, 2f }, // cue ready, cue go
                                                   new List<float>() { 2f, 8f }, new List<float>() { 8f, 9.5f } }; // task, rest
         block_number = 0;
