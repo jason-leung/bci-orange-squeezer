@@ -8,17 +8,17 @@ namespace Assets.LSL4Unity.Scripts.Examples {
     public class EMGStreamInlet : InletFloatSamples
     {
         public bool pullSamplesContinuously = false;
-        public float[] emgSample;
+
+        public GameMarkerStream gameMarkerStream;
+        public TrialManager trialManager;
+
+        public bool coroutineAlreadyRunning = false;
+
         public float[] emgProcessed;
-        
         float[] emg_max;
         float[] sample_max;
         int sample_number = 0;
         int window_size = 50;
-
-        public JuiceController juiceController;
-        public BlockManager blockManager;
-        public GameMarkerStream gameMarkerStream;
 
         void Start()
         {
@@ -26,8 +26,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             // got instantiated during runtime
 
             // registerAndLookUpStream();
-            juiceController = FindObjectOfType<JuiceController>();
-            blockManager = FindObjectOfType<BlockManager>();
+            trialManager= FindObjectOfType<TrialManager>();
             gameMarkerStream = FindObjectOfType<GameMarkerStream>();
 
             emgProcessed = new float[2];
@@ -56,10 +55,11 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         /// <param name="timeStamp"></param>
         protected override void Process(float[] newSample, double timeStamp)
         {
-            if (blockManager.block_number >= blockManager.blocks.Count) return;
-            if (blockManager.blocks[blockManager.block_number] != "ME") return;
+            if (coroutineAlreadyRunning) return;
+            if (trialManager.currentState != "task") return;
+            if (trialManager.blockStructure[trialManager.currentBlock] != "ME") return;
             if (pullSamplesContinuously == false) return;
-            if (newSample.Length < 2) return;
+            if (newSample.Length < 6) return;
             
             StartCoroutine(ProcessEMGSample(newSample));
         }
@@ -78,28 +78,44 @@ namespace Assets.LSL4Unity.Scripts.Examples {
          
         private void Update()
         {
-            if(pullSamplesContinuously)
+            if (pullSamplesContinuously) 
                 pullSamples();
         }
 
         IEnumerator ProcessEMGSample(float[] newSample)
         {
+            coroutineAlreadyRunning = true;
             if (sample_number == window_size)
             {
-                emgProcessed[0] = System.Math.Min(sample_max[0] / emg_max[0] * 9f, 9f);
-                emgProcessed[1] = System.Math.Min(sample_max[1] / emg_max[1] * 9f, 9f);
+                emgProcessed[0] = System.Math.Min(sample_max[0] / emg_max[0] , 1f);
+                emgProcessed[1] = System.Math.Min(sample_max[1] / emg_max[1] , 1f);
 
-                if (emgProcessed[0] <= 1f) juiceController.StopSqueezeLeft();
-                else juiceController.SqueezeLeft(emgProcessed[0]);
-                if (emgProcessed[1] <= 1f) juiceController.StopSqueezeRight();
-                else juiceController.SqueezeRight(emgProcessed[1]);
+                if (emgProcessed[0] <= 0.1f)
+                {
+                    trialManager.juiceL.SetActive(false);
+                    trialManager.handL.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
+                }
+                else
+                {
+                    trialManager.juiceL.SetActive(true);
+                    trialManager.handL.transform.localScale = new Vector3(0.8f - (0.3f * emgProcessed[0]), 0.8f, 0.02221f);
+                }
+
+                if (emgProcessed[1] <= 0.1f)
+                {
+                    trialManager.juiceR.SetActive(false);
+                    trialManager.handR.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
+                }
+                else
+                {
+                    trialManager.juiceR.SetActive(true);
+                    trialManager.handR.transform.localScale = new Vector3(0.8f - (0.3f * emgProcessed[1]), 0.8f, 0.02221f);
+                }
 
                 sample_number = 0;
                 sample_max[0] = 0f;
                 sample_max[1] = 0f;
             }
-
-            // emgSample = newSample;
 
             // Left sensors
             sample_max[0] = System.Math.Max(System.Math.Abs(newSample[0]), sample_max[0]);
@@ -112,7 +128,9 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             sample_max[1] = System.Math.Max(System.Math.Abs(newSample[5]), sample_max[1]);
 
             sample_number += 1;
-            yield break;
+
+            coroutineAlreadyRunning = false;
+            yield return null;
         }
     }
 }

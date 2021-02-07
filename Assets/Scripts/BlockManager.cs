@@ -66,6 +66,10 @@ public class BlockManager : MonoBehaviour
         InitializeTrials();
         LoadBlock();
     }
+    void FixedUpdate()
+    {
+        Debug.Log(Time.fixedDeltaTime);
+    }
 
     void Update()
     {

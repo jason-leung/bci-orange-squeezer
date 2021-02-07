@@ -41,11 +41,10 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         /// <param name="timeStamp"></param>
         protected override void Process(float[] newSample, double timeStamp)
         {
-            if (pullSamplesContinuously == false) return;
-            if (newSample.Length < numberOfChannels) return;
+            //if (pullSamplesContinuously == false) return;
+            //if (newSample.Length < numberOfChannels) return;
 
-            eegSample = newSample;
-            StartCoroutine(ProcessEEGSample(timeStamp, newSample));
+            //eegSample = newSample;
         }
 
         protected override void OnStreamAvailable()
@@ -64,11 +63,6 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         {
             if(pullSamplesContinuously)
                 pullSamples();
-        }
-
-        IEnumerator ProcessEEGSample(double timestamp, float[] newSample)
-        {
-            yield break;
         }
     }
 }

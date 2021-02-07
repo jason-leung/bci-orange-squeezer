@@ -51,6 +51,8 @@ public class JuiceController : MonoBehaviour
 
         orange_right.transform.localScale = new Vector3(0.5f, 0.5f, 1f);
         orange_left.transform.localScale = new Vector3(-0.5f, 0.5f, 1f);
+
+        StopAllCoroutines();
     }
 
     // Update is called once per frame

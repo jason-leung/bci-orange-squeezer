@@ -15,6 +15,10 @@ public class Home : MonoBehaviour
     public GameObject settings_panel;
     public GameObject[] settings_emgMax_slider;
     public GameObject[] settings_emgMax_value;
+    public GameObject settings_numBlocks_slider;
+    public GameObject settings_numBlocks_value;
+    public GameObject settings_numTrials_slider;
+    public GameObject settings_numTrials_value;
 
     void Start()
     {
@@ -33,8 +37,12 @@ public class Home : MonoBehaviour
         settings_panel = FindObjectOfType<Canvas>().transform.Find("Settings_Panel").gameObject;
         settings_emgMax_slider[0] = settings_panel.transform.Find("EMG_Max_Left").transform.Find("Slider").gameObject;
         settings_emgMax_slider[1] = settings_panel.transform.Find("EMG_Max_Right").transform.Find("Slider").gameObject;
+        settings_numBlocks_slider = settings_panel.transform.Find("Num_Blocks").transform.Find("Slider").gameObject;
+        settings_numTrials_slider = settings_panel.transform.Find("Num_Trials").transform.Find("Slider").gameObject;
         settings_emgMax_value[0] = settings_panel.transform.Find("EMG_Max_Left").transform.Find("Value").gameObject;
         settings_emgMax_value[1] = settings_panel.transform.Find("EMG_Max_Right").transform.Find("Value").gameObject;
+        settings_numBlocks_value = settings_panel.transform.Find("Num_Blocks").transform.Find("Value").gameObject;
+        settings_numTrials_value = settings_panel.transform.Find("Num_Trials").transform.Find("Value").gameObject;
 
         // Default EMG MAX settings
         if (!PlayerPrefs.HasKey("EMG_Max_Left")) PlayerPrefs.SetFloat("EMG_Max_Left", 11f / 1000f);
@@ -42,6 +50,13 @@ public class Home : MonoBehaviour
 
         if (PlayerPrefs.HasKey("EMG_Max_Left")) settings_emgMax_slider[0].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Left") * 1000f;
         if (PlayerPrefs.HasKey("EMG_Max_Right")) settings_emgMax_slider[1].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Right") * 1000f;
+
+        // Default trial settings
+        if (!PlayerPrefs.HasKey("NumBlocks")) PlayerPrefs.SetInt("NumBlocks", 6);
+        if (!PlayerPrefs.HasKey("NumTrials")) PlayerPrefs.SetInt("NumTrials", 16);
+
+        if (PlayerPrefs.HasKey("NumBlocks")) settings_numBlocks_slider.GetComponent<Slider>().value = PlayerPrefs.GetInt("NumBlocks");
+        if (PlayerPrefs.HasKey("NumTrials")) settings_numTrials_slider.GetComponent<Slider>().value = PlayerPrefs.GetInt("NumTrials");
     }
 
     public void ExitApplication()
@@ -100,5 +115,19 @@ public class Home : MonoBehaviour
         string prefKey = "EMG_Max_";
         prefKey += (side == 0) ? "Left" : "Right";
         PlayerPrefs.SetFloat(prefKey, (float)(emg_max / 1000f));
+    }
+
+    public void OnSetNumBlocksSlider()
+    {
+        int numBlocks = (int)settings_numBlocks_slider.GetComponent<Slider>().value;
+        settings_numBlocks_value.GetComponent<Text>().text = numBlocks.ToString();
+        PlayerPrefs.SetInt("NumBlocks", numBlocks);
+    }
+
+    public void OnSetNumTrialsSlider()
+    {
+        int numTrials = (int)settings_numTrials_slider.GetComponent<Slider>().value;
+        settings_numTrials_value.GetComponent<Text>().text = numTrials.ToString();
+        PlayerPrefs.SetInt("NumTrials", numTrials);
     }
 }

@@ -25,6 +25,9 @@ public class ConnectionPanel : MonoBehaviour
     public EMGStreamInlet emgStreamInlet;
     public EEGStreamInlet eegStreamInlet;
 
+    public int pauseGameCounter = 0;
+    public int pauseGameBuffer = 50;
+
 
     // Start is called before the first frame update
     void Start()
@@ -48,8 +51,30 @@ public class ConnectionPanel : MonoBehaviour
         isEMGConnected = emgStreamInlet.pullSamplesContinuously;
         isEEGConnected = eegStreamInlet.pullSamplesContinuously;
 
-        // Pause game if any connections are offline
-        if (!isGameMarkerConnected || !isEMGConnected || !isEEGConnected) pauseGame = true;
+        //// Pause game if any connections are offline
+        //if (!isGameMarkerConnected || !isEMGConnected || !isEEGConnected) pauseGame = true;
+
+        //if (pauseGame)
+        //{
+        //    // Stop time and send marker
+        //    Time.timeScale = 0f;
+        //    // gameMarkerStream.WriteGameMarker("conection_lost");
+
+        //    // update UI
+        //    connectionPanel.SetActive(true);
+        //    SetStreamConnection(gameMarker, isGameMarkerConnected);
+        //    SetStreamConnection(emg, isEMGConnected);
+        //    SetStreamConnection(eeg, isEEGConnected);
+        //    UpdateContinueButton();
+        //}
+
+        if ((!isGameMarkerConnected || !isEMGConnected || !isEEGConnected) && pauseGame == false)
+        {
+            pauseGameCounter += 1;
+        }
+        if ((isGameMarkerConnected && isEMGConnected && isEEGConnected) || pauseGame) pauseGameCounter = 0;
+
+        if (pauseGameCounter >= pauseGameBuffer) pauseGame = true;
 
         if (pauseGame)
         {

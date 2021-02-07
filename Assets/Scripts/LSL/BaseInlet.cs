@@ -12,7 +12,7 @@ namespace Assets.LSL4Unity.Scripts.AbstractInlets
         
         public string StreamType;
         
-        protected liblsl.StreamInlet inlet;
+        public liblsl.StreamInlet inlet;
 
         protected int expectedChannels;
 
