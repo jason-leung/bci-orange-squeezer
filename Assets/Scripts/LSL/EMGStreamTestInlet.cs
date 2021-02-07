@@ -2,16 +2,12 @@
 using UnityEngine; 
 using Assets.LSL4Unity.Scripts.AbstractInlets;
 using System;
-
+using UnityEngine.UI;
 namespace Assets.LSL4Unity.Scripts.Examples {
 
-    public class EMGStreamInlet : InletFloatSamples
+    public class EMGStreamTestInlet : InletFloatSamples
     {
         public bool pullSamplesContinuously = false;
-
-        public GameMarkerStream gameMarkerStream;
-        public TrialManager trialManager;
-
         public bool coroutineAlreadyRunning = false;
 
         public float[] emgProcessed;
@@ -21,22 +17,19 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         int sample_number = 0;
         int window_size = 50;
 
+        public GameObject emgLeft;
+        public GameObject emgRight;
+
         void Start()
         {
             // [optional] call this only, if your gameobject hosting this component
             // got instantiated during runtime
 
             // registerAndLookUpStream();
-            trialManager= FindObjectOfType<TrialManager>();
-            gameMarkerStream = FindObjectOfType<GameMarkerStream>();
 
             emgProcessed = new float[2];
             emg_min = new float[2] { 0f, 0f };
             emg_max = new float[2] { 0.011f, 0.011f };
-            if (PlayerPrefs.HasKey("EMG_Min_Left")) emg_min[0] = PlayerPrefs.GetFloat("EMG_Min_Left");
-            if (PlayerPrefs.HasKey("EMG_Min_Right")) emg_min[1] = PlayerPrefs.GetFloat("EMG_Min_Right");
-            if (PlayerPrefs.HasKey("EMG_Max_Left")) emg_max[0] = PlayerPrefs.GetFloat("EMG_Max_Left");
-            if (PlayerPrefs.HasKey("EMG_Max_Right")) emg_max[1] = PlayerPrefs.GetFloat("EMG_Max_Right");
             sample_max = new float[2] { 0, 0 };
         }
 
@@ -60,8 +53,6 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         protected override void Process(float[] newSample, double timeStamp)
         {
             if (coroutineAlreadyRunning) return;
-            if (trialManager.currentState != "task") return;
-            if (trialManager.blockStructure[trialManager.currentBlock] != "ME") return;
             if (pullSamplesContinuously == false) return;
             if (newSample.Length < 6) return;
             
@@ -71,13 +62,11 @@ namespace Assets.LSL4Unity.Scripts.Examples {
         protected override void OnStreamAvailable()
         {
             pullSamplesContinuously = true;
-            gameMarkerStream.WriteGameMarker("EMG stream found");
         }
 
         protected override void OnStreamLost()
         {
             pullSamplesContinuously = false;
-            gameMarkerStream.WriteGameMarker("EMG stream lost");
         }
          
         private void Update()
@@ -91,30 +80,23 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             coroutineAlreadyRunning = true;
             if (sample_number == window_size)
             {
+                if (PlayerPrefs.HasKey("EMG_Min_Left")) emg_min[0] = PlayerPrefs.GetFloat("EMG_Min_Left");
+                if (PlayerPrefs.HasKey("EMG_Min_Right")) emg_min[1] = PlayerPrefs.GetFloat("EMG_Min_Right");
+                if (PlayerPrefs.HasKey("EMG_Max_Left")) emg_max[0] = PlayerPrefs.GetFloat("EMG_Max_Left");
+                if (PlayerPrefs.HasKey("EMG_Max_Right")) emg_max[1] = PlayerPrefs.GetFloat("EMG_Max_Right");
+
                 emgProcessed[0] = System.Math.Max(System.Math.Min((sample_max[0] - emg_min[0]) / (emg_max[0] - emg_min[0]), 1f), 0f);
                 emgProcessed[1] = System.Math.Max(System.Math.Min((sample_max[1] - emg_min[1]) / (emg_max[1] - emg_min[1]), 1f), 0f);
 
-                if (emgProcessed[0] <= 0.1f)
-                {
-                    trialManager.juiceL.SetActive(false);
-                    trialManager.handL.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
-                }
-                else
-                {
-                    trialManager.juiceL.SetActive(true);
-                    trialManager.handL.transform.localScale = new Vector3(0.8f - (0.3f * emgProcessed[0]), 0.8f, 0.02221f);
-                }
-
-                if (emgProcessed[1] <= 0.1f)
-                {
-                    trialManager.juiceR.SetActive(false);
-                    trialManager.handR.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
-                }
-                else
-                {
-                    trialManager.juiceR.SetActive(true);
-                    trialManager.handR.transform.localScale = new Vector3(0.8f - (0.3f * emgProcessed[1]), 0.8f, 0.02221f);
-                }
+                // update UI
+                emgLeft.transform.Find("Value0").gameObject.GetComponent<Text>().text = newSample[0].ToString();
+                emgLeft.transform.Find("Value1").gameObject.GetComponent<Text>().text = newSample[1].ToString();
+                emgLeft.transform.Find("Value2").gameObject.GetComponent<Text>().text = newSample[2].ToString();
+                emgRight.transform.Find("Value0").gameObject.GetComponent<Text>().text = newSample[3].ToString();
+                emgRight.transform.Find("Value1").gameObject.GetComponent<Text>().text = newSample[4].ToString();
+                emgRight.transform.Find("Value2").gameObject.GetComponent<Text>().text = newSample[5].ToString();
+                emgLeft.transform.Find("ValueProc").gameObject.GetComponent<Text>().text = emgProcessed[0].ToString();
+                emgRight.transform.Find("ValueProc").gameObject.GetComponent<Text>().text = emgProcessed[1].ToString();
 
                 sample_number = 0;
                 sample_max[0] = 0f;

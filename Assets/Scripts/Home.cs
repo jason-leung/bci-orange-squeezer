@@ -13,6 +13,8 @@ public class Home : MonoBehaviour
     public GameObject howtoplay_nextButton;
     public int pageNumber;
     public GameObject settings_panel;
+    public GameObject[] settings_emgMin_slider;
+    public GameObject[] settings_emgMin_value;
     public GameObject[] settings_emgMax_slider;
     public GameObject[] settings_emgMax_value;
     public GameObject settings_numBlocks_slider;
@@ -32,22 +34,32 @@ public class Home : MonoBehaviour
 
     private void Awake()
     {
+        settings_emgMin_slider = new GameObject[2];
+        settings_emgMin_value = new GameObject[2];
         settings_emgMax_slider = new GameObject[2];
         settings_emgMax_value = new GameObject[2];
         settings_panel = FindObjectOfType<Canvas>().transform.Find("Settings_Panel").gameObject;
+        settings_emgMin_slider[0] = settings_panel.transform.Find("EMG_Min_Left").transform.Find("Slider").gameObject;
+        settings_emgMin_slider[1] = settings_panel.transform.Find("EMG_Min_Right").transform.Find("Slider").gameObject;
         settings_emgMax_slider[0] = settings_panel.transform.Find("EMG_Max_Left").transform.Find("Slider").gameObject;
         settings_emgMax_slider[1] = settings_panel.transform.Find("EMG_Max_Right").transform.Find("Slider").gameObject;
         settings_numBlocks_slider = settings_panel.transform.Find("Num_Blocks").transform.Find("Slider").gameObject;
         settings_numTrials_slider = settings_panel.transform.Find("Num_Trials").transform.Find("Slider").gameObject;
+        settings_emgMin_value[0] = settings_panel.transform.Find("EMG_Min_Left").transform.Find("Value").gameObject;
+        settings_emgMin_value[1] = settings_panel.transform.Find("EMG_Min_Right").transform.Find("Value").gameObject;
         settings_emgMax_value[0] = settings_panel.transform.Find("EMG_Max_Left").transform.Find("Value").gameObject;
         settings_emgMax_value[1] = settings_panel.transform.Find("EMG_Max_Right").transform.Find("Value").gameObject;
         settings_numBlocks_value = settings_panel.transform.Find("Num_Blocks").transform.Find("Value").gameObject;
         settings_numTrials_value = settings_panel.transform.Find("Num_Trials").transform.Find("Value").gameObject;
 
-        // Default EMG MAX settings
+        // Default EMG settings
+        if (!PlayerPrefs.HasKey("EMG_Min_Left")) PlayerPrefs.SetFloat("EMG_Min_Left", 0f / 1000f);
+        if (!PlayerPrefs.HasKey("EMG_Min_Right")) PlayerPrefs.SetFloat("EMG_Min_Right", 0f / 1000f);
         if (!PlayerPrefs.HasKey("EMG_Max_Left")) PlayerPrefs.SetFloat("EMG_Max_Left", 11f / 1000f);
         if (!PlayerPrefs.HasKey("EMG_Max_Right")) PlayerPrefs.SetFloat("EMG_Max_Right", 11f / 1000f);
 
+        if (PlayerPrefs.HasKey("EMG_Min_Left")) settings_emgMin_slider[0].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Min_Left") * 1000f;
+        if (PlayerPrefs.HasKey("EMG_Min_Right")) settings_emgMin_slider[1].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Min_Right") * 1000f;
         if (PlayerPrefs.HasKey("EMG_Max_Left")) settings_emgMax_slider[0].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Left") * 1000f;
         if (PlayerPrefs.HasKey("EMG_Max_Right")) settings_emgMax_slider[1].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Right") * 1000f;
 
@@ -108,7 +120,16 @@ public class Home : MonoBehaviour
         settings_panel.SetActive(!settings_panel.activeSelf);
     }
 
-    public void OnSetEMGSlider(int side)
+    public void OnSetEMGMinSlider(int side)
+    {
+        double emg_min = System.Math.Round(settings_emgMin_slider[side].GetComponent<Slider>().value, 2);
+        settings_emgMin_value[side].GetComponent<Text>().text = emg_min.ToString("n2") + " mV";
+        string prefKey = "EMG_Min_";
+        prefKey += (side == 0) ? "Left" : "Right";
+        PlayerPrefs.SetFloat(prefKey, (float)(emg_min / 1000f));
+    }
+
+    public void OnSetEMGMaxSlider(int side)
     {
         double emg_max = System.Math.Round(settings_emgMax_slider[side].GetComponent<Slider>().value, 2);
         settings_emgMax_value[side].GetComponent<Text>().text = emg_max.ToString("n2") + " mV";
