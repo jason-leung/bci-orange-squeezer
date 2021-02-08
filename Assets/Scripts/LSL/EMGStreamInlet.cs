@@ -102,6 +102,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
                 else
                 {
                     trialManager.juiceL.SetActive(true);
+                    trialManager.juiceL.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.5f - (0.475f * emgProcessed[0]);
                     trialManager.handL.transform.localScale = new Vector3(0.8f - (0.3f * emgProcessed[0]), 0.8f, 0.02221f);
                 }
 
@@ -113,6 +114,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
                 else
                 {
                     trialManager.juiceR.SetActive(true);
+                    trialManager.juiceR.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.5f - (0.475f * emgProcessed[1]);
                     trialManager.handR.transform.localScale = new Vector3(0.8f - (0.3f * emgProcessed[1]), 0.8f, 0.02221f);
                 }
 

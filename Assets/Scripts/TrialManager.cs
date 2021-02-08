@@ -181,6 +181,7 @@ public class TrialManager : MonoBehaviour
                 {
                     juiceL.SetActive(true);
                     juiceL.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.LAVA;
+                    juiceL.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.025f;
                     handL.transform.localScale = new Vector3(0.5f, 0.8f, 0.02221f);
                     juiceR.SetActive(false);
                     juiceR.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.NONE;
@@ -193,6 +194,7 @@ public class TrialManager : MonoBehaviour
                     handL.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
                     juiceR.SetActive(true);
                     juiceR.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.LAVA;
+                    juiceR.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.025f;
                     handR.transform.localScale = new Vector3(0.5f, 0.8f, 0.02221f);
                 }
             }
