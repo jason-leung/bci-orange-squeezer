@@ -64,7 +64,7 @@ namespace Assets.LSL4Unity.Scripts
 
         public void WriteGameMarker(string marker)
         {
-            Write(marker, DateTime.Now.ToOADate());
+            Write(marker);
         }
 
         IEnumerator WriteMarkerAfterImageIsRendered(string pendingMarker)

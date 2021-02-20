@@ -55,7 +55,7 @@ public class TrialManager : MonoBehaviour
         trialFrames = 500;
         numBlocks = PlayerPrefs.GetInt("NumBlocks");
         numTrials = PlayerPrefs.GetInt("NumTrials");
-        frameNumber = 0;
+        frameNumber = -1;
 
         currentBlock = 0;
         currentTrial = 0;
@@ -75,7 +75,7 @@ public class TrialManager : MonoBehaviour
             trial = trial.OrderBy(x => UnityEngine.Random.value).ToList();
             trialStructure.Add(trial);
         }
-        blockStructure = blockStructure.OrderBy(x => UnityEngine.Random.value).ToList();
+        //blockStructure = blockStructure.OrderBy(x => UnityEngine.Random.value).ToList();
 
         allBlocksCompleted = false;
         gamePaused = true;
@@ -94,12 +94,28 @@ public class TrialManager : MonoBehaviour
     {
 
         // Write GameMarkers
-        if (frameNumber == stateStartFrame[0] || frameNumber == stateStartFrame[2] || frameNumber == stateStartFrame[4] || frameNumber == stateStartFrame[6])
+        if (frameNumber == stateStartFrame[0])
         {
+            currentState = stateTypes[0];
+            gameMarkerStream.WriteGameMarker("start_block_" + currentBlock + "_" + blockStructure[currentBlock] + "_trial_" + currentTrial + "_" + trialStructure[currentBlock][currentTrial]);
             gameMarkerStream.WriteGameMarker(currentState);
         }
-        if (allBlocksCompleted) gameMarkerStream.WriteGameMarker("trial_END");
-
+        else if (frameNumber == stateStartFrame[2])
+        {
+            currentState = stateTypes[1];
+            gameMarkerStream.WriteGameMarker(currentState);
+        }
+        else if (frameNumber == stateStartFrame[4])
+        {
+            currentState = stateTypes[2];
+            gameMarkerStream.WriteGameMarker(currentState);
+        }
+        else if (frameNumber == stateStartFrame[6])
+        {
+            currentState = stateTypes[3];
+            gameMarkerStream.WriteGameMarker(currentState);
+        }
+        
         // Update frames
         if(!allBlocksCompleted && !gamePaused)
         {
@@ -123,6 +139,7 @@ public class TrialManager : MonoBehaviour
                     {
                         currentBlock = 0;
                         allBlocksCompleted = true;
+                        gameMarkerStream.WriteGameMarker("END");
                     }
 
                     Time.timeScale = 0f;
@@ -147,7 +164,6 @@ public class TrialManager : MonoBehaviour
         // Cue ready
         if (frameNumber >= stateStartFrame[0] && frameNumber <= stateStartFrame[1])
         {
-            currentState = stateTypes[0];
             readyText.SetActive(true);
             glassL.SetActive(trialStructure[currentBlock][currentTrial] == "l");
             glassR.SetActive(trialStructure[currentBlock][currentTrial] == "r");
@@ -165,14 +181,12 @@ public class TrialManager : MonoBehaviour
         // Cue go
         else if (frameNumber >= stateStartFrame[2] && frameNumber <= stateStartFrame[3])
         {
-            currentState = stateTypes[1];
             readyText.SetActive(false);
             goText.SetActive(true);
         }
         // Task
         else if (frameNumber >= stateStartFrame[4] && frameNumber <= stateStartFrame[5])
         {
-            currentState = stateTypes[2];
             goText.SetActive(false);
 
             if (blockStructure[currentBlock] == "MI")
@@ -208,7 +222,6 @@ public class TrialManager : MonoBehaviour
         // Rest
         else if (frameNumber >= stateStartFrame[6] && frameNumber <= stateStartFrame[7])
         {
-            currentState = stateTypes[3];
             glassL.SetActive(false);
             glassR.SetActive(false);
             handL.SetActive(false);
@@ -238,7 +251,6 @@ public class TrialManager : MonoBehaviour
         gamePaused = false;
         Time.timeScale = 1f;
         blockPanel.SetActive(false);
-        gameMarkerStream.WriteGameMarker("start_block_" + currentBlock + "_" + blockStructure[currentBlock] + "_trial_" + currentTrial + "_" + trialStructure[currentBlock][currentTrial]);
     }
 
     public void ContinueAfterConnectionLost()
