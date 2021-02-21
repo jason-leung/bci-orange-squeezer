@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -139,7 +140,7 @@ public class TrialManager : MonoBehaviour
                     {
                         currentBlock = 0;
                         allBlocksCompleted = true;
-                        gameMarkerStream.WriteGameMarker("END");
+                        gameMarkerStream.WriteGameMarker("END_" + DateTime.Now.ToString("yyyy-MM-dd-HH:mm:ss.fff"));
                     }
 
                     Time.timeScale = 0f;

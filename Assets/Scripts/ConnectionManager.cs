@@ -95,7 +95,7 @@ public class ConnectionManager : MonoBehaviour
     public void Continue()
     {
         connectionPanel.SetActive(false);
-        gameMarkerStream.WriteGameMarker("conections initialized");
+        gameMarkerStream.WriteGameMarker("conections initialized_" + DateTime.Now.ToString("yyyy-MM-dd-HH:mm:ss.fff"));
         Time.timeScale = 1f;
         if (!blockPanel.activeSelf) trialManager.gamePaused = false;
     }
