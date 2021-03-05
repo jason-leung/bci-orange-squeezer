@@ -54,8 +54,10 @@ public class TrialManager : MonoBehaviour
         stateTypes = new List<string>() { "cue_ready", "cue_go", "task", "rest" };
         stateStartFrame = new List<int>() { 0, 49, 50, 99, 100, 399, 400, 499 };
         trialFrames = 500;
-        numBlocks = PlayerPrefs.GetInt("NumBlocks");
-        numTrials = PlayerPrefs.GetInt("NumTrials");
+        //numBlocks = PlayerPrefs.GetInt("NumBlocks");
+        //numTrials = PlayerPrefs.GetInt("NumTrials");
+        numBlocks = 2;
+        numTrials = 2;
         frameNumber = -1;
 
         currentBlock = 0;
@@ -73,7 +75,7 @@ public class TrialManager : MonoBehaviour
             {
                 trial.Add((t % 2 == 0) ? "r" : "l");
             }
-            trial = trial.OrderBy(x => UnityEngine.Random.value).ToList();
+            //trial = trial.OrderBy(x => UnityEngine.Random.value).ToList();
             trialStructure.Add(trial);
         }
         //blockStructure = blockStructure.OrderBy(x => UnityEngine.Random.value).ToList();
@@ -93,7 +95,6 @@ public class TrialManager : MonoBehaviour
 
     void FixedUpdate()
     {
-
         // Write GameMarkers
         if (frameNumber == stateStartFrame[0])
         {
@@ -156,6 +157,13 @@ public class TrialManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        // Check for Key Down
+        if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6))
+        {
+            Debug.Log("Key 6");
+            StartBlock();
+        }
+
         if (allBlocksCompleted)
         {
             sessionOverPanel.SetActive(true);
@@ -190,35 +198,26 @@ public class TrialManager : MonoBehaviour
         {
             goText.SetActive(false);
 
-            if (blockStructure[currentBlock] == "MI")
+            if (trialStructure[currentBlock][currentTrial] == "l")
             {
-                if (trialStructure[currentBlock][currentTrial] == "l")
-                {
-                    juiceL.SetActive(true);
-                    juiceL.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.LAVA;
-                    juiceL.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.025f;
-                    handL.transform.localScale = new Vector3(0.5f, 0.8f, 0.02221f);
-                    juiceR.SetActive(false);
-                    juiceR.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.NONE;
-                    handR.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
-                }
-                else
-                {
-                    juiceL.SetActive(false);
-                    juiceL.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.NONE;
-                    handL.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
-                    juiceR.SetActive(true);
-                    juiceR.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.LAVA;
-                    juiceR.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.025f;
-                    handR.transform.localScale = new Vector3(0.5f, 0.8f, 0.02221f);
-                }
-            }
-            else if (blockStructure[currentBlock] == "ME")
-            {
+                juiceL.SetActive(true);
                 juiceL.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.LAVA;
-                juiceR.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.LAVA;
+                juiceL.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.025f;
+                handL.transform.localScale = new Vector3(0.5f, 0.8f, 0.02221f);
+                juiceR.SetActive(false);
+                juiceR.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.NONE;
+                handR.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
             }
-
+            else
+            {
+                juiceL.SetActive(false);
+                juiceL.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.NONE;
+                handL.transform.localScale = new Vector3(0.8f, 0.8f, 0.02221f);
+                juiceR.SetActive(true);
+                juiceR.GetComponent<ParticleGenerator>().particlesState = DynamicParticle.STATES.LAVA;
+                juiceR.GetComponent<ParticleGenerator>().SPAWN_INTERVAL = 0.025f;
+                handR.transform.localScale = new Vector3(0.5f, 0.8f, 0.02221f);
+            }
         }
         // Rest
         else if (frameNumber >= stateStartFrame[6] && frameNumber <= stateStartFrame[7])
@@ -263,6 +262,9 @@ public class TrialManager : MonoBehaviour
 
     public void ReturnToHome()
     {
-        SceneManager.LoadScene("Home");
+        //SceneManager.LoadScene("Home");
+        Application.Quit();
     }
+
+
 }
