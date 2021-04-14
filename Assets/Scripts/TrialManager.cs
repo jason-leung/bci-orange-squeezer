@@ -157,17 +157,20 @@ public class TrialManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // Check for Key Down
-        if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6))
-        {
-            Debug.Log("Key 6");
-            StartBlock();
-        }
-
         if (allBlocksCompleted)
         {
             sessionOverPanel.SetActive(true);
             return;
+        }
+
+        // Check for Key Down
+        if (Input.GetKeyDown(KeyCode.Keypad6) || Input.GetKeyDown(KeyCode.Alpha6) || Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Alpha5) || Input.GetKeyDown(KeyCode.Plus) || Input.GetKeyDown(KeyCode.Equals))
+        //if (Input.anyKey)
+        {
+            //Debug.Log("Key 6");
+            //Debug.Log("any key");
+            Debug.Log("some keys");
+            StartBlock();
         }
 
         // Cue ready
