@@ -190,6 +190,7 @@ public class TrialManager : MonoBehaviour
         {
             goText.SetActive(false);
 
+            //if (blockStructure[currentBlock] == "MI" || blockStructure[currentBlock] == "ME")
             if (blockStructure[currentBlock] == "MI")
             {
                 if (trialStructure[currentBlock][currentTrial] == "l")

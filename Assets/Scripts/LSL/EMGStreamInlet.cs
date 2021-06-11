@@ -64,7 +64,7 @@ namespace Assets.LSL4Unity.Scripts.Examples {
             if (trialManager.blockStructure[trialManager.currentBlock] != "ME") return;
             if (pullSamplesContinuously == false) return;
             if (newSample.Length < 6) return;
-            
+
             StartCoroutine(ProcessEMGSample(newSample));
         }
 

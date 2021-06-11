@@ -64,7 +64,7 @@ public class Home : MonoBehaviour
         if (PlayerPrefs.HasKey("EMG_Max_Right")) settings_emgMax_slider[1].GetComponent<Slider>().value = PlayerPrefs.GetFloat("EMG_Max_Right") * 1000f;
 
         // Default trial settings
-        if (!PlayerPrefs.HasKey("NumBlocks")) PlayerPrefs.SetInt("NumBlocks", 6);
+        if (!PlayerPrefs.HasKey("NumBlocks")) PlayerPrefs.SetInt("NumBlocks", 12);
         if (!PlayerPrefs.HasKey("NumTrials")) PlayerPrefs.SetInt("NumTrials", 16);
 
         if (PlayerPrefs.HasKey("NumBlocks")) settings_numBlocks_slider.GetComponent<Slider>().value = PlayerPrefs.GetInt("NumBlocks");

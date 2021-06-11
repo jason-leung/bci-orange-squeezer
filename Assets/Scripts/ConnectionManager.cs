@@ -24,7 +24,7 @@ public class ConnectionManager : MonoBehaviour
     public Sprite offlineSprite;
 
     public bool isGameMarkerConnected = true;
-    public bool isEMGConnected = false;
+    public bool isEMGConnected = true;
     public bool isEEGConnected = false;
 
     public bool connectionLost = false;
@@ -46,7 +46,7 @@ public class ConnectionManager : MonoBehaviour
     {
         // get connection status
         isGameMarkerConnected = true;
-        isEMGConnected = emgStreamInlet.pullSamplesContinuously;
+        isEMGConnected = true;
         isEEGConnected = eegStreamInlet.pullSamplesContinuously;
         connectionLost = (!isGameMarkerConnected || !isEMGConnected || !isEEGConnected);
 
